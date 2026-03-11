@@ -1,0 +1,440 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── CATÁLOGOS ────────────────────────────────────────────────────────────────
+
+model MedioReporte {
+  id          Int          @id @default(autoincrement())
+  codigo      String?
+  descripcion String?
+  habilitado  Boolean      @default(true)
+  numeracion  Int?
+  incidencias Incidencia[]
+  operadores  Operador[]
+  usuarios    Usuario[]
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  @@map("medio_reportes")
+}
+
+model Unidad {
+  id          Int          @id @default(autoincrement())
+  descripcion String?
+  habilitado  Boolean      @default(true)
+  incidencias Incidencia[]
+  tipoCasos   TipoCaso[]
+  rutas       Ruta[]
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  @@map("unidades")
+}
+
+model TipoCaso {
+  id           Int           @id @default(autoincrement())
+  codigo       String?
+  descripcion  String?
+  habilitado   Boolean       @default(true)
+  unidadId     Int?
+  unidad       Unidad?       @relation(fields: [unidadId], references: [id])
+  subTipoCasos SubTipoCaso[]
+  incidencias  Incidencia[]
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(6)
+
+  @@map("tipo_casos")
+}
+
+model SubTipoCaso {
+  id          Int          @id @default(autoincrement())
+  codigo      String?
+  descripcion String?
+  urgencia    String?
+  habilitado  Boolean      @default(true)
+  tipoCasoId  Int?
+  tipoCaso    TipoCaso?    @relation(fields: [tipoCasoId], references: [id])
+  incidencias Incidencia[]
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  @@map("sub_tipo_casos")
+}
+
+model TipoReportante {
+  id          Int          @id @default(autoincrement())
+  descripcion String?
+  habilitado  Boolean      @default(true)
+  incidencias Incidencia[]
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  @@map("tipo_reportantes")
+}
+
+model Severidad {
+  id          Int          @id @default(autoincrement())
+  descripcion String?
+  habilitado  Boolean      @default(true)
+  incidencias Incidencia[]
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  @@map("severidades")
+}
+
+model SeveridadProceso {
+  id          Int          @id @default(autoincrement())
+  descripcion String?
+  incidencias Incidencia[]
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  @@map("severidad_procesos")
+}
+
+model EstadoIncidencia {
+  id          Int          @id @default(autoincrement())
+  descripcion String?
+  habilitado  Boolean      @default(true)
+  incidencias Incidencia[]
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  @@map("estado_incidencias")
+}
+
+model EstadoProceso {
+  id          Int          @id @default(autoincrement())
+  descripcion String?
+  incidencias Incidencia[]
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  @@map("estado_procesos")
+}
+
+model CargoSereno {
+  id          Int       @id @default(autoincrement())
+  descripcion String?
+  habilitado  Boolean   @default(true)
+  serenos     Sereno[]
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@map("cargo_serenos")
+}
+
+model Operador {
+  id          Int           @id @default(autoincrement())
+  descripcion String?
+  habilitado  Boolean       @default(true)
+  medioId     Int?
+  medio       MedioReporte? @relation(fields: [medioId], references: [id])
+  incidencias Incidencia[]
+  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime      @updatedAt @db.Timestamptz(6)
+
+  @@map("operadores")
+}
+
+model Jurisdiccion {
+  id          Int          @id @default(autoincrement())
+  codigo      String?
+  nombre      String?
+  habilitado  Boolean      @default(true)
+  incidencias Incidencia[]
+  delitos     Delito[]
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  @@map("jurisdicciones")
+}
+
+model GeneroAgresor {
+  id          Int          @id @default(autoincrement())
+  descripcion String?
+  incidencias Incidencia[]
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  @@map("genero_agresores")
+}
+
+model GeneroVictima {
+  id          Int          @id @default(autoincrement())
+  descripcion String?
+  incidencias Incidencia[]
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  @@map("genero_victimas")
+}
+
+model TipoDelito {
+  id         Int      @id @default(autoincrement())
+  nombre     String?
+  habilitado Boolean  @default(true)
+  delitos    Delito[]
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(6)
+
+  @@map("tipo_delitos")
+}
+
+// ─── USUARIOS & AUTH ──────────────────────────────────────────────────────────
+
+model Usuario {
+  id            Int            @id @default(autoincrement())
+  nombres       String
+  apellidos     String?
+  email         String         @unique
+  username      String?        @unique
+  password      String
+  habilitado    Boolean        @default(true)
+  medioId       Int?
+  medio         MedioReporte?  @relation(fields: [medioId], references: [id])
+  roles         UsuarioRol[]
+  incidencias   Incidencia[]
+  evidencias    Evidencia[]
+  refreshTokens RefreshToken[]
+  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt @db.Timestamptz(6)
+
+  @@map("usuarios")
+}
+
+model Rol {
+  id          Int          @id @default(autoincrement())
+  nombre      String       @unique
+  descripcion String?
+  usuarios    UsuarioRol[]
+  permisos    RolPermiso[]
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  @@map("roles")
+}
+
+model Permiso {
+  id          Int          @id @default(autoincrement())
+  nombre      String       @unique
+  descripcion String?
+  roles       RolPermiso[]
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  @@map("permisos")
+}
+
+model UsuarioRol {
+  usuarioId Int
+  rolId     Int
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  rol       Rol     @relation(fields: [rolId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, rolId])
+  @@map("usuario_roles")
+}
+
+model RolPermiso {
+  rolId     Int
+  permisoId Int
+  rol       Rol     @relation(fields: [rolId], references: [id], onDelete: Cascade)
+  permiso   Permiso @relation(fields: [permisoId], references: [id], onDelete: Cascade)
+
+  @@id([rolId, permisoId])
+  @@map("rol_permisos")
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  token     String    @unique
+  usuarioId Int
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  expiresAt DateTime  @db.Timestamptz(6)
+  revokedAt DateTime? @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@map("refresh_tokens")
+}
+
+// ─── AUDITORÍA ────────────────────────────────────────────────────────────────
+
+model AuditoriaUsuario {
+  id                Int      @id @default(autoincrement())
+  modulo            String   @default("Usuarios") // Usuarios | Serenos | Incidencias | etc.
+  accion            String   // CREAR | EDITAR | ELIMINAR
+  usuarioAfectadoId Int?
+  usuarioAfectado   String   // nombre guardado aunque se elimine
+  realizadoPorId    Int?
+  realizadoPor      String   // username del admin
+  detalles          Json?
+  createdAt         DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("auditoria_usuarios")
+}
+
+// ─── PERSONAL OPERATIVO ───────────────────────────────────────────────────────
+
+model Sereno {
+  id                Int                @id @default(autoincrement())
+  dni               String?            @unique
+  nombres           String?
+  apellidoPaterno   String?
+  apellidoMaterno   String?
+  habilitado        Boolean            @default(true)
+  cargoSerenoId     Int?
+  cargoSereno       CargoSereno?       @relation(fields: [cargoSerenoId], references: [id])
+  incidenciaSerenos IncidenciaSereno[]
+  createdAt         DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime           @updatedAt @db.Timestamptz(6)
+
+  @@map("serenos")
+}
+
+// ─── CORE DEL NEGOCIO ─────────────────────────────────────────────────────────
+
+model Incidencia {
+  id               Int     @id @default(autoincrement())
+  codigoIncidencia String? @unique
+
+  // Clasificación
+  unidadId      Int?
+  unidad        Unidad?      @relation(fields: [unidadId], references: [id])
+  tipoCasoId    Int?
+  tipoCaso      TipoCaso?    @relation(fields: [tipoCasoId], references: [id])
+  subTipoCasoId Int?
+  subTipoCaso   SubTipoCaso? @relation(fields: [subTipoCasoId], references: [id])
+
+  // Reportante
+  tipoReportanteId   Int?
+  tipoReportante     TipoReportante? @relation(fields: [tipoReportanteId], references: [id])
+  nombreReportante   String?
+  telefonoReportante String?
+
+  // Ubicación
+  direccion String?
+  latitud   Decimal? @db.Decimal(10, 8)
+  longitud  Decimal? @db.Decimal(11, 8)
+
+  // Descripción
+  descripcion String? @db.Text
+
+  // Temporalidad unificada
+  registradoEn DateTime? @db.Timestamptz(6)
+  ocurridoEn   DateTime? @db.Timestamptz(6)
+  atendidoEn   DateTime? @db.Timestamptz(6)
+
+  // Clasificación adicional
+  severidadId    Int?
+  severidad      Severidad?    @relation(fields: [severidadId], references: [id])
+  jurisdiccionId Int?
+  jurisdiccion   Jurisdiccion? @relation(fields: [jurisdiccionId], references: [id])
+
+  // Estado
+  situacionId Int?
+  situacion   EstadoIncidencia? @relation(fields: [situacionId], references: [id])
+
+  // Canal y operador
+  medioId    Int?
+  medio      MedioReporte? @relation(fields: [medioId], references: [id])
+  operadorId Int?
+  operador   Operador?     @relation(fields: [operadorId], references: [id])
+  usuarioId  Int?
+  usuario    Usuario?      @relation(fields: [usuarioId], references: [id])
+
+  // Atención
+  descripcionIntervencion String? @db.Text
+  nombreAgraviado         String?
+  telefonoAgraviado       String?
+
+  // Proceso
+  estadoProcesoId    Int?
+  estadoProceso      EstadoProceso?    @relation(fields: [estadoProcesoId], references: [id])
+  generoAgresorId    Int?
+  generoAgresor      GeneroAgresor?    @relation(fields: [generoAgresorId], references: [id])
+  generoVictimaId    Int?
+  generoVictima      GeneroVictima?    @relation(fields: [generoVictimaId], references: [id])
+  severidadProcesoId Int?
+  severidadProceso   SeveridadProceso? @relation(fields: [severidadProcesoId], references: [id])
+
+  // Relaciones
+  serenos    IncidenciaSereno[]
+  evidencias Evidencia[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  @@map("incidencias")
+}
+
+model IncidenciaSereno {
+  id           Int        @id @default(autoincrement())
+  incidenciaId Int
+  incidencia   Incidencia @relation(fields: [incidenciaId], references: [id], onDelete: Cascade)
+  serenoId     Int
+  sereno       Sereno     @relation(fields: [serenoId], references: [id])
+  createdAt    DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime   @updatedAt @db.Timestamptz(6)
+
+  @@unique([incidenciaId, serenoId])
+  @@map("incidencia_serenos")
+}
+
+model Evidencia {
+  id                Int        @id @default(autoincrement())
+  nombreArchivo     String?
+  rutaArchivo       String?
+  fechaHoraRegistro DateTime?  @db.Timestamptz(6)
+  incidenciaId      Int
+  incidencia        Incidencia @relation(fields: [incidenciaId], references: [id], onDelete: Cascade)
+  usuarioId         Int?
+  usuario           Usuario?   @relation(fields: [usuarioId], references: [id])
+  createdAt         DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime   @updatedAt @db.Timestamptz(6)
+
+  @@map("evidencias")
+}
+
+// ─── TRACKING GPS ─────────────────────────────────────────────────────────────
+
+model Ruta {
+  id        Int       @id @default(autoincrement())
+  fecha     DateTime? @db.Date
+  hora      String?
+  latitud   Decimal?  @db.Decimal(10, 8)
+  longitud  Decimal?  @db.Decimal(11, 8)
+  unidadId  Int?
+  unidad    Unidad?   @relation(fields: [unidadId], references: [id])
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@map("rutas")
+}
+
+// ─── DELITOS ──────────────────────────────────────────────────────────────────
+
+model Delito {
+  id             Int           @id @default(autoincrement())
+  direccion      String?
+  latitud        Decimal?      @db.Decimal(10, 8)
+  longitud       Decimal?      @db.Decimal(11, 8)
+  habilitado     Boolean       @default(true)
+  jurisdiccionId Int?
+  jurisdiccion   Jurisdiccion? @relation(fields: [jurisdiccionId], references: [id])
+  tipoDelitoId   Int?
+  tipoDelito     TipoDelito?   @relation(fields: [tipoDelitoId], references: [id])
+  createdAt      DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime      @updatedAt @db.Timestamptz(6)
+
+  @@map("delitos")
+}
