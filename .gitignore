@@ -6,4 +6,4 @@ dist
 /generated/prisma
 uploads/*
 !uploads/.gitkeep
-scripts/cecom_import.sql
+scripts/*
