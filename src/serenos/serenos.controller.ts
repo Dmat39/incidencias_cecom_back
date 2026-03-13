@@ -19,12 +19,14 @@ import { CreateSerenoDto } from './dto/create-sereno.dto';
 @ApiTags('Serenos')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
 @Controller('serenos')
 export class SerenosController {
   constructor(private serenosService: SerenosService) {}
 
+  // ─── Lectura: todos los roles autenticados ────────────────────────────────
+
   @Get()
+  @Roles('admin', 'supervisor', 'operador', 'validador')
   @ApiOperation({ summary: 'Listar serenos con paginación' })
   findAll(
     @Query('habilitado') habilitado?: string,
@@ -37,24 +39,30 @@ export class SerenosController {
   }
 
   @Get('por-cargo/:cargoId')
+  @Roles('admin', 'supervisor', 'operador', 'validador')
   @ApiOperation({ summary: 'Listar serenos por cargo' })
   findByCargo(@Param('cargoId', ParseIntPipe) cargoId: number) {
     return this.serenosService.findByCargo(cargoId);
   }
 
   @Get(':id')
+  @Roles('admin', 'supervisor', 'operador', 'validador')
   @ApiOperation({ summary: 'Obtener sereno por ID' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.serenosService.findOne(id);
   }
 
+  // ─── Escritura: solo admin ────────────────────────────────────────────────
+
   @Post()
+  @Roles('admin')
   @ApiOperation({ summary: 'Crear sereno' })
   create(@Body() dto: CreateSerenoDto) {
     return this.serenosService.create(dto);
   }
 
   @Patch(':id')
+  @Roles('admin')
   @ApiOperation({ summary: 'Actualizar sereno' })
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -64,6 +72,7 @@ export class SerenosController {
   }
 
   @Patch(':id/estado')
+  @Roles('admin')
   @ApiOperation({ summary: 'Habilitar/deshabilitar sereno' })
   toggleEstado(@Param('id', ParseIntPipe) id: number) {
     return this.serenosService.toggleEstado(id);

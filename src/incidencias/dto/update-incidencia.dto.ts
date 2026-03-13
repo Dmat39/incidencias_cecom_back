@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/swagger';
 import { CreateIncidenciaDto } from './create-incidencia.dto';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsInt, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsDateString, IsInt, IsOptional, IsString } from 'class-validator';
 
 export class UpdateIncidenciaDto extends PartialType(CreateIncidenciaDto) {}
 
@@ -81,5 +81,7 @@ export class UpdateAtencionDto {
 
 export class UpdateSerenosDto {
   @ApiPropertyOptional({ type: [Number] })
-  serenosIds: number[];
+  @IsOptional()
+  @IsArray()
+  serenosIds?: number[];
 }

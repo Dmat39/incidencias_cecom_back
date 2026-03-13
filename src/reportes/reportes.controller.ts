@@ -23,6 +23,8 @@ export class ReportesController {
       fechaFin?: string;
       situacionId?: number;
       unidadId?: number;
+      tipoCasoId?: number;
+      subTipoCasoId?: number;
     },
     @Res() res: Response,
   ) {

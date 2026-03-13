@@ -21,6 +21,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { IncidenciasService } from './incidencias.service';
+import { EvidenciasService } from '../evidencias/evidencias.service';
 import { CreateIncidenciaDto } from './dto/create-incidencia.dto';
 import {
   UpdateAtencionDto,
@@ -36,7 +37,10 @@ import { FilterIncidenciaDto } from './dto/filter-incidencia.dto';
 @Roles('admin', 'supervisor', 'operador', 'validador')
 @Controller('incidencias')
 export class IncidenciasController {
-  constructor(private incidenciasService: IncidenciasService) {}
+  constructor(
+    private incidenciasService: IncidenciasService,
+    private evidenciasService: EvidenciasService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Listar incidencias con filtros y paginación' })
@@ -58,8 +62,9 @@ export class IncidenciasController {
   findMapa(
     @Query('fechaInicio') fechaInicio?: string,
     @Query('fechaFin')    fechaFin?: string,
+    @Query('turno')       turno?: string,
   ) {
-    return this.incidenciasService.findMapa(fechaInicio, fechaFin);
+    return this.incidenciasService.findMapa(fechaInicio, fechaFin, turno);
   }
 
   @Get('calor')
@@ -122,7 +127,7 @@ export class IncidenciasController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateSerenosDto,
   ) {
-    return this.incidenciasService.updateSerenos(id, dto.serenosIds);
+    return this.incidenciasService.updateSerenos(id, dto.serenosIds ?? []);
   }
 
   @Delete(':id')
@@ -149,11 +154,6 @@ export class IncidenciasController {
     @UploadedFile() file: Express.Multer.File,
     @CurrentUser('id') usuarioId: number,
   ) {
-    return {
-      incidenciaId: id,
-      nombreArchivo: file.originalname,
-      rutaArchivo: file.path,
-      usuarioId,
-    };
+    return this.evidenciasService.create(id, file, usuarioId);
   }
 }

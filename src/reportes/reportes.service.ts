@@ -11,15 +11,19 @@ export class ReportesService {
     fechaFin?: string;
     situacionId?: number;
     unidadId?: number;
+    tipoCasoId?: number;
+    subTipoCasoId?: number;
   }): Promise<Buffer> {
     const where: any = {};
     if (filters.fechaInicio || filters.fechaFin) {
       where.registradoEn = {};
-      if (filters.fechaInicio) where.registradoEn.gte = new Date(filters.fechaInicio);
-      if (filters.fechaFin) where.registradoEn.lte = new Date(filters.fechaFin);
+      if (filters.fechaInicio) where.registradoEn.gte = new Date(filters.fechaInicio + 'T00:00:00');
+      if (filters.fechaFin)    where.registradoEn.lte = new Date(filters.fechaFin    + 'T23:59:59.999');
     }
     if (filters.situacionId) where.situacionId = filters.situacionId;
     if (filters.unidadId) where.unidadId = filters.unidadId;
+    if (filters.tipoCasoId) where.tipoCasoId = filters.tipoCasoId;
+    if (filters.subTipoCasoId) where.subTipoCasoId = filters.subTipoCasoId;
 
     const incidencias = await this.prisma.incidencia.findMany({
       where,
@@ -83,8 +87,8 @@ export class ReportesService {
         estado: inc.situacion?.descripcion ?? '',
         severidad: inc.severidad?.descripcion ?? '',
         medio: inc.medio?.descripcion ?? '',
-        reportante: inc.nombreReportante ?? '',
-        telefono: inc.telefonoReportante ?? '',
+        reportante: inc.nombreReportante      || 'No registra',
+        telefono:   inc.telefonoReportante    || 'No registra teléfono',
         operador: inc.operador?.descripcion ?? '',
         usuario: [inc.usuario?.nombres, inc.usuario?.apellidos].filter(Boolean).join(' ') ?? '',
       });

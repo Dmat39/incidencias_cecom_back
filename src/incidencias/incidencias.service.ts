@@ -155,27 +155,65 @@ export class IncidenciasService {
     };
   }
 
-  async findMapa(fechaInicio?: string, fechaFin?: string) {
+  async findMapa(fechaInicio?: string, fechaFin?: string, turno?: string) {
     const today = new Date().toISOString().split('T')[0];
-    const desde = new Date((fechaInicio || today) + 'T00:00:00');
-    const hasta = new Date((fechaFin   || today) + 'T23:59:59.999');
+    const desdeDia = fechaInicio || today;
+    const hastaDia = fechaFin   || today;
+
+    const SELECT = {
+      id: true,
+      codigoIncidencia: true,
+      latitud: true,
+      longitud: true,
+      situacionId: true,
+      situacion: { select: { descripcion: true } },
+      tipoCaso: { select: { descripcion: true } },
+      registradoEn: true,
+    };
+
+    const BASE = { latitud: { not: null }, longitud: { not: null } };
+
+    if (turno === 'mañana' || turno === 'tarde' || turno === 'noche') {
+      const ranges: Array<{ gte: Date; lte: Date }> = [];
+      const cursor = new Date(desdeDia + 'T00:00:00');
+      const limit  = new Date(hastaDia + 'T00:00:00');
+
+      while (cursor <= limit) {
+        const y  = cursor.getFullYear();
+        const m  = String(cursor.getMonth() + 1).padStart(2, '0');
+        const d  = String(cursor.getDate()).padStart(2, '0');
+        const dia = `${y}-${m}-${d}`;
+
+        if (turno === 'mañana') {
+          ranges.push({ gte: new Date(`${dia}T06:00:00`), lte: new Date(`${dia}T13:59:59.999`) });
+        } else if (turno === 'tarde') {
+          ranges.push({ gte: new Date(`${dia}T14:00:00`), lte: new Date(`${dia}T21:59:59.999`) });
+        } else {
+          const next = new Date(cursor);
+          next.setDate(next.getDate() + 1);
+          const yn = next.getFullYear();
+          const mn = String(next.getMonth() + 1).padStart(2, '0');
+          const dn = String(next.getDate()).padStart(2, '0');
+          ranges.push({ gte: new Date(`${dia}T22:00:00`), lte: new Date(`${yn}-${mn}-${dn}T05:59:59.999`) });
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      return this.prisma.incidencia.findMany({
+        where: { ...BASE, OR: ranges.map((r) => ({ registradoEn: r })) },
+        select: SELECT,
+      });
+    }
 
     return this.prisma.incidencia.findMany({
       where: {
-        latitud: { not: null },
-        longitud: { not: null },
-        registradoEn: { gte: desde, lte: hasta },
+        ...BASE,
+        registradoEn: {
+          gte: new Date(desdeDia + 'T00:00:00'),
+          lte: new Date(hastaDia + 'T23:59:59.999'),
+        },
       },
-      select: {
-        id: true,
-        codigoIncidencia: true,
-        latitud: true,
-        longitud: true,
-        situacionId: true,
-        situacion: { select: { descripcion: true } },
-        tipoCaso: { select: { descripcion: true } },
-        registradoEn: true,
-      },
+      select: SELECT,
     });
   }
 
@@ -243,9 +281,9 @@ export class IncidenciasService {
   async updateSerenos(id: number, serenosIds: number[]) {
     await this.findOne(id);
     await this.prisma.incidenciaSereno.deleteMany({ where: { incidenciaId: id } });
-    if (serenosIds.length) {
+    if (serenosIds?.length) {
       await this.prisma.incidenciaSereno.createMany({
-        data: serenosIds.map((serenoId) => ({ incidenciaId: id, serenoId })),
+        data: (serenosIds ?? []).map((serenoId) => ({ incidenciaId: id, serenoId })),
         skipDuplicates: true,
       });
     }
