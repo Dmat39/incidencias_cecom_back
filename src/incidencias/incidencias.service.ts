@@ -233,7 +233,7 @@ export class IncidenciasService {
         ocurridoEn: dto.ocurridoEn ? new Date(dto.ocurridoEn) : undefined,
         codigoIncidencia,
         usuarioId,
-        registradoEn: new Date(),
+        registradoEn: new Date(Date.now() - 5 * 60 * 60 * 1000), 
       },
       include: INCLUDE_INCIDENCIA,
     });
