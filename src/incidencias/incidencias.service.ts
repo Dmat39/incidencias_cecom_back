@@ -230,10 +230,10 @@ export class IncidenciasService {
     const incidencia = await this.prisma.incidencia.create({
       data: {
         ...dto,
-        ocurridoEn: dto.ocurridoEn ? new Date(dto.ocurridoEn) : undefined,
+        ocurridoEn: dto.ocurridoEn ? new Date(dto.ocurridoEn + '-05:00') : undefined,
         codigoIncidencia,
         usuarioId,
-        registradoEn: new Date(Date.now() - 5 * 60 * 60 * 1000), 
+        registradoEn: new Date(),
       },
       include: INCLUDE_INCIDENCIA,
     });
