@@ -8,6 +8,7 @@ import {
 } from './dto/update-incidencia.dto';
 import { FilterIncidenciaDto } from './dto/filter-incidencia.dto';
 import { IncidenciasGateway } from './incidencias.gateway';
+import { EvidenciasService } from 'src/evidencias/evidencias.service';
 
 const PREFIJOS: Record<number, string> = {
   1: 'R',
@@ -43,6 +44,7 @@ export class IncidenciasService {
   constructor(
     private prisma: PrismaService,
     private gateway: IncidenciasGateway,
+    private evidenciasService: EvidenciasService,
   ) {}
 
   async findAll(filters: FilterIncidenciaDto) {
@@ -224,7 +226,7 @@ export class IncidenciasService {
     });
   }
 
-  async create(dto: CreateIncidenciaDto, usuarioId: number) {
+  async create(dto: CreateIncidenciaDto, usuarioId: number, imagen: Express.Multer.File) {
     const codigoIncidencia = await this.generarCodigo(dto.medioId);
 
     const incidencia = await this.prisma.incidencia.create({
@@ -238,8 +240,12 @@ export class IncidenciasService {
       include: INCLUDE_INCIDENCIA,
     });
 
-    this.gateway.emitNuevaIncidencia(incidencia);
-    return incidencia;
+    await this.evidenciasService.create(incidencia.id, imagen, usuarioId);
+
+    const incidenciaConEvidencia = await this.findOne(incidencia.id);
+
+    this.gateway.emitNuevaIncidencia(incidenciaConEvidencia);
+    return incidenciaConEvidencia;
   }
 
   async update(id: number, dto: UpdateIncidenciaDto) {
