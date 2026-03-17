@@ -99,15 +99,13 @@ export class IncidenciasController {
       }),
     }),
   )
+  @Post()
+  @ApiOperation({ summary: 'Crear incidencia' })
   create(
     @Body() dto: CreateIncidenciaDto,
-    @UploadedFile() imagen: Express.Multer.File,
     @CurrentUser('id') usuarioId: number,
   ) {
-    if (!imagen) {
-      throw new BadRequestException('La imagen es obligatoria');
-    }
-    return this.incidenciasService.create(dto, usuarioId, imagen);
+    return this.incidenciasService.create(dto, usuarioId);
   }
 
   @Patch(':id')
