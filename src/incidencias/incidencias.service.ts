@@ -226,9 +226,9 @@ export class IncidenciasService {
     });
   }
 
-  async create(dto: CreateIncidenciaDto, usuarioId: number, imagen: Express.Multer.File) {
+  async create(dto: CreateIncidenciaDto, usuarioId: number) {
     const codigoIncidencia = await this.generarCodigo(dto.medioId);
-
+  
     const incidencia = await this.prisma.incidencia.create({
       data: {
         ...dto,
@@ -239,13 +239,9 @@ export class IncidenciasService {
       },
       include: INCLUDE_INCIDENCIA,
     });
-
-    await this.evidenciasService.create(incidencia.id, imagen, usuarioId);
-
-    const incidenciaConEvidencia = await this.findOne(incidencia.id);
-
-    this.gateway.emitNuevaIncidencia(incidenciaConEvidencia);
-    return incidenciaConEvidencia;
+  
+    this.gateway.emitNuevaIncidencia(incidencia);
+    return incidencia;
   }
 
   async update(id: number, dto: UpdateIncidenciaDto) {
