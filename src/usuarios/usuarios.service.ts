@@ -34,8 +34,28 @@ export class UsuariosService {
     return roles.map((r) => r.id);
   }
 
-  async findAll() {
-    return this.prisma.usuario.findMany({ select: SELECT_USUARIO });
+  async findAll(filters?: { search?: string; page?: number; limit?: number }) {
+    const page  = filters?.page  ?? 1;
+    const limit = filters?.limit ?? 20;
+    const skip  = (page - 1) * limit;
+
+    const where: any = {};
+    if (filters?.search?.trim()) {
+      const q = filters.search.trim();
+      where.OR = [
+        { username:  { contains: q, mode: 'insensitive' } },
+        { nombres:   { contains: q, mode: 'insensitive' } },
+        { apellidos: { contains: q, mode: 'insensitive' } },
+        { email:     { contains: q, mode: 'insensitive' } },
+      ];
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.usuario.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' }, select: SELECT_USUARIO }),
+      this.prisma.usuario.count({ where }),
+    ]);
+
+    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
   }
 
   async findOne(id: number) {
