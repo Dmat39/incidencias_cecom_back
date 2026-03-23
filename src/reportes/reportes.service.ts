@@ -2,6 +2,19 @@ import { Injectable } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
 import { PrismaService } from '../prisma/prisma.service';
 
+function fmtLima(date: Date | null | undefined): string {
+  if (!date) return '';
+  return date.toLocaleString('sv-SE', { timeZone: 'America/Lima' });
+}
+
+function getTurno(date: Date | null | undefined): string {
+  if (!date) return '';
+  const hora = parseInt(date.toLocaleString('sv-SE', { timeZone: 'America/Lima' }).slice(11, 13), 10);
+  if (hora >= 6 && hora < 14)  return 'Mañana';
+  if (hora >= 14 && hora < 22) return 'Tarde';
+  return 'Noche';
+}
+
 @Injectable()
 export class ReportesService {
   constructor(private prisma: PrismaService) {}
@@ -48,6 +61,7 @@ export class ReportesService {
     sheet.columns = [
       { header: 'Código', key: 'codigo', width: 15 },
       { header: 'Fecha Registro', key: 'fechaRegistro', width: 20 },
+      { header: 'Turno',         key: 'turno',         width: 12 },
       { header: 'Unidad', key: 'unidad', width: 15 },
       { header: 'Tipo Caso', key: 'tipoCaso', width: 20 },
       { header: 'Subtipo', key: 'subTipoCaso', width: 20 },
@@ -77,7 +91,8 @@ export class ReportesService {
     incidencias.forEach((inc) => {
       sheet.addRow({
         codigo: inc.codigoIncidencia ?? '',
-        fechaRegistro: inc.registradoEn?.toISOString() ?? '',
+        fechaRegistro: fmtLima(inc.registradoEn),
+        turno:         getTurno(inc.registradoEn),
         unidad: inc.unidad?.descripcion ?? '',
         tipoCaso: inc.tipoCaso?.descripcion ?? '',
         subTipoCaso: inc.subTipoCaso?.descripcion ?? '',
