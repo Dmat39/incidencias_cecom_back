@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import { PrismaService } from '../prisma/prisma.service';
 
 export interface PersonalGestionate {
   id: number;
@@ -17,6 +18,7 @@ export class GestionateService {
   constructor(
     private readonly http: HttpService,
     private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async buscarPorDni(dni: string): Promise<PersonalGestionate> {
@@ -36,11 +38,11 @@ export class GestionateService {
       );
       personal = data?.data;
     } catch {
-      throw new BadRequestException('No se encontró personal con ese DNI en Gestionate');
+      throw new BadRequestException('No encontrado en Gestionate');
     }
 
     if (!personal) {
-      throw new BadRequestException('No se encontró personal con ese DNI en Gestionate');
+      throw new BadRequestException('No encontrado en Gestionate');
     }
 
     return {
@@ -51,5 +53,31 @@ export class GestionateService {
       cargo:       personal.cargo?.nombre ?? '',
       subgerencia: personal.subgerencia?.nombre ?? '',
     };
+  }
+
+  // Busca en la tabla local de serenos por DNI exacto
+  async buscarLocal(dni: string): Promise<PersonalGestionate | null> {
+    const sereno = await this.prisma.sereno.findUnique({
+      where: { dni },
+      include: { cargoSereno: true },
+    });
+    if (!sereno) return null;
+    return {
+      id:          sereno.id,
+      dni:         sereno.dni ?? dni,
+      nombres:     sereno.nombres ?? '',
+      apellidos:   sereno.apellidoPaterno ?? '',
+      cargo:       sereno.cargoSereno?.descripcion ?? '',
+      subgerencia: '',
+    };
+  }
+
+  // Guarda un sereno en la tabla local (upsert por DNI)
+  async guardarLocal(dni: string, nombreCompleto: string): Promise<void> {
+    await this.prisma.sereno.upsert({
+      where:  { dni },
+      update: { nombres: nombreCompleto, habilitado: true },
+      create: { dni, nombres: nombreCompleto, habilitado: true },
+    });
   }
 }
