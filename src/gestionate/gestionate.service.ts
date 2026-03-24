@@ -72,6 +72,32 @@ export class GestionateService {
     };
   }
 
+  // Busca serenos en tabla local por nombre/apellido (búsqueda parcial)
+  async buscarPorNombre(query: string): Promise<PersonalGestionate[]> {
+    const serenos = await this.prisma.sereno.findMany({
+      where: {
+        habilitado: true,
+        OR: [
+          { nombres: { contains: query, mode: 'insensitive' } },
+          { apellidoPaterno: { contains: query, mode: 'insensitive' } },
+          { apellidoMaterno: { contains: query, mode: 'insensitive' } },
+        ],
+      },
+      include: { cargoSereno: true },
+      orderBy: { apellidoPaterno: 'asc' },
+      take: 10,
+    });
+
+    return serenos.map(s => ({
+      id:          s.id,
+      dni:         s.dni ?? '',
+      nombres:     s.nombres ?? '',
+      apellidos:   `${s.apellidoPaterno ?? ''} ${s.apellidoMaterno ?? ''}`.trim(),
+      cargo:       s.cargoSereno?.descripcion ?? '',
+      subgerencia: '',
+    }));
+  }
+
   // Guarda un sereno en la tabla local (upsert por DNI)
   async guardarLocal(dni: string, nombreCompleto: string): Promise<void> {
     await this.prisma.sereno.upsert({

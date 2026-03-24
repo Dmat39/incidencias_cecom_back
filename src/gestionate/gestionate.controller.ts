@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IsString, Length } from 'class-validator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -23,6 +23,14 @@ export class GestionateController {
   @ApiOperation({ summary: 'Buscar personal en Gestionate por DNI' })
   buscarPorDni(@Param('dni') dni: string) {
     return this.gestionateService.buscarPorDni(dni);
+  }
+
+  @Get('personal/local/buscar-nombre')
+  @Roles('admin', 'supervisor', 'operador', 'validador')
+  @ApiOperation({ summary: 'Buscar serenos en tabla local por nombre/apellido' })
+  buscarPorNombre(@Query('q') q: string) {
+    if (!q || q.trim().length < 2) return { data: [] };
+    return this.gestionateService.buscarPorNombre(q.trim());
   }
 
   @Get('personal/local/:dni')
