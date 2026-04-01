@@ -30,8 +30,13 @@ export class ReportesService {
     const where: any = {};
     if (filters.fechaInicio || filters.fechaFin) {
       where.registradoEn = {};
-      if (filters.fechaInicio) where.registradoEn.gte = new Date(filters.fechaInicio + 'T00:00:00');
-      if (filters.fechaFin)    where.registradoEn.lte = new Date(filters.fechaFin    + 'T23:59:59.999');
+      // Perú = UTC-5: 00:00 PET = 05:00 UTC; 23:59:59.999 PET = 04:59:59.999 UTC del día siguiente
+      if (filters.fechaInicio) where.registradoEn.gte = new Date(filters.fechaInicio + 'T05:00:00.000Z');
+      if (filters.fechaFin) {
+        const hastaBase = new Date(filters.fechaFin + 'T05:00:00.000Z');
+        hastaBase.setDate(hastaBase.getDate() + 1);
+        where.registradoEn.lte = new Date(hastaBase.getTime() - 1);
+      }
     }
     if (filters.situacionId) where.situacionId = filters.situacionId;
     if (filters.unidadId) where.unidadId = filters.unidadId;

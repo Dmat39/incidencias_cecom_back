@@ -6,6 +6,7 @@ export const MODULOS = [
   'usuarios',
   'catalogos',
   'reportes',
+  'metricas',
   'auditoria',
   'svi',
 ] as const;
@@ -13,10 +14,10 @@ export const MODULOS = [
 export type Modulo = (typeof MODULOS)[number];
 
 export const ROLE_PERMISSIONS: Record<string, Modulo[]> = {
-  admin:      ['dashboard', 'incidencias', 'mapa', 'serenos', 'usuarios', 'catalogos', 'reportes', 'auditoria', 'svi'],
-  validador:  ['dashboard', 'incidencias', 'reportes', 'svi'],
-  supervisor: ['dashboard', 'incidencias', 'mapa', 'usuarios', 'catalogos'],
-  operador:   ['dashboard', 'incidencias', 'mapa', 'reportes'],
+  admin:      ['dashboard', 'incidencias', 'mapa', 'serenos', 'usuarios', 'catalogos', 'reportes', 'metricas', 'auditoria', 'svi'],
+  validador:  ['dashboard', 'incidencias', 'svi'],
+  supervisor: ['dashboard', 'incidencias', 'mapa', 'usuarios', 'catalogos', 'reportes', 'metricas'],
+  operador:   ['dashboard', 'incidencias', 'mapa'],
 };
 
 export function getModulosForRoles(roles: string[]): Modulo[] {

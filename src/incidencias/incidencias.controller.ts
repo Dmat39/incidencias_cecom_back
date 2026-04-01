@@ -74,6 +74,15 @@ export class IncidenciasController {
     return this.incidenciasService.findCalor();
   }
 
+  @Get('metricas/operadores')
+  @ApiOperation({ summary: 'Métricas de operadores: ranking, severidad, turno' })
+  getMetricasOperadores(
+    @Query('fechaInicio') fechaInicio?: string,
+    @Query('fechaFin')    fechaFin?: string,
+  ) {
+    return this.incidenciasService.getMetricasOperadores(fechaInicio, fechaFin);
+  }
+
   @Get('codigo/:codigo')
   @ApiOperation({ summary: 'Buscar por código de incidencia' })
   findByCodigo(@Param('codigo') codigo: string) {
@@ -99,8 +108,6 @@ export class IncidenciasController {
       }),
     }),
   )
-  @Post()
-  @ApiOperation({ summary: 'Crear incidencia' })
   create(
     @Body() dto: CreateIncidenciaDto,
     @CurrentUser('id') usuarioId: number,

@@ -1,9 +1,14 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDateString, IsInt, IsOptional } from 'class-validator';
+import { IsDateString, IsInt, IsOptional, IsString } from 'class-validator';
 import { PaginationDto } from '../../common/pagination/pagination.dto';
 
 export class FilterIncidenciaDto extends PaginationDto {
+  @ApiPropertyOptional({ description: 'Buscar por código, dirección, tipo de caso o unidad' })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsDateString()
@@ -31,6 +36,12 @@ export class FilterIncidenciaDto extends PaginationDto {
   @Type(() => Number)
   @IsInt()
   jurisdiccionId?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  severidadId?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
