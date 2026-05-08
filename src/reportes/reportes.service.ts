@@ -72,6 +72,7 @@ export class ReportesService {
       { header: 'Subtipo', key: 'subTipoCaso', width: 20 },
       { header: 'Descripción', key: 'descripcion', width: 40 },
       { header: 'Dirección', key: 'direccion', width: 30 },
+      { header: 'Coordenadas', key: 'coordenadas', width: 28 },
       { header: 'Jurisdicción', key: 'jurisdiccion', width: 15 },
       { header: 'Estado', key: 'estado', width: 15 },
       { header: 'Severidad', key: 'severidad', width: 12 },
@@ -103,6 +104,9 @@ export class ReportesService {
         subTipoCaso: inc.subTipoCaso?.descripcion ?? '',
         descripcion: inc.descripcion ?? '',
         direccion: inc.direccion ?? '',
+        coordenadas: inc.latitud != null && inc.longitud != null
+          ? `${Number(inc.latitud)}, ${Number(inc.longitud)}`
+          : '',
         jurisdiccion: inc.jurisdiccion?.nombre ?? '',
         estado: inc.situacion?.descripcion ?? '',
         severidad: inc.severidad?.descripcion ?? '',
