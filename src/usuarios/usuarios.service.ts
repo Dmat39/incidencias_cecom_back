@@ -18,6 +18,12 @@ const SELECT_USUARIO = {
   medioId: true,
   medio: { select: { id: true, descripcion: true } },
   roles: { include: { rol: { select: { id: true, nombre: true } } } },
+  jurisdiccionesAsignadas: {
+    select: {
+      jurisdiccionId: true,
+      jurisdiccion: { select: { id: true, nombre: true } },
+    },
+  },
   createdAt: true,
   updatedAt: true,
 };
@@ -132,5 +138,16 @@ export class UsuariosService {
       data: roleIds.map((rolId) => ({ usuarioId: id, rolId })),
     });
     return this.getRoles(id);
+  }
+
+  async asignarJurisdicciones(id: number, jurisdiccionIds: number[]) {
+    await this.findOne(id);
+    await this.prisma.usuarioJurisdiccionAsignada.deleteMany({ where: { usuarioId: id } });
+    if (jurisdiccionIds.length) {
+      await this.prisma.usuarioJurisdiccionAsignada.createMany({
+        data: jurisdiccionIds.map((jurisdiccionId) => ({ usuarioId: id, jurisdiccionId })),
+      });
+    }
+    return this.findOne(id);
   }
 }
