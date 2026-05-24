@@ -6,28 +6,29 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsNotEmpty,
 } from 'class-validator';
 
 export class CreateIncidenciaDto {
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsNotEmpty({ message: 'La unidad es obligatoria' })
   @IsInt()
-  unidadId?: number;
+  unidadId: number;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsNotEmpty({ message: 'El tipo de caso es obligatorio' })
   @IsInt()
-  tipoCasoId?: number;
+  tipoCasoId: number;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsNotEmpty({ message: 'El subtipo de caso es obligatorio' })
   @IsInt()
-  subTipoCasoId?: number;
+  subTipoCasoId: number;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsNotEmpty({ message: 'El tipo de reportante es obligatorio' })
   @IsInt()
-  tipoReportanteId?: number;
+  tipoReportanteId: number;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -40,26 +41,26 @@ export class CreateIncidenciaDto {
   telefonoReportante?: string;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsNotEmpty({ message: 'La dirección es obligatoria' })
   @IsString()
-  direccion?: string;
+  direccion: string;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsNotEmpty({ message: 'La latitud es obligatoria' })
   @IsNumber()
   @Type(() => Number)
-  latitud?: number;
+  latitud: number;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsNotEmpty({ message: 'La longitud es obligatoria' })
   @IsNumber()
   @Type(() => Number)
-  longitud?: number;
+  longitud: number;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsNotEmpty({ message: 'La descripción es obligatoria' })
   @IsString()
-  descripcion?: string;
+  descripcion: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -67,14 +68,14 @@ export class CreateIncidenciaDto {
   ocurridoEn?: string;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsNotEmpty({ message: 'La severidad es obligatoria' })
   @IsInt()
-  severidadId?: number;
+  severidadId: number;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsNotEmpty({ message: 'La jurisdicción es obligatoria' })
   @IsInt()
-  jurisdiccionId?: number;
+  jurisdiccionId: number;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -82,12 +83,12 @@ export class CreateIncidenciaDto {
   situacionId?: number;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsNotEmpty({ message: 'El medio es obligatorio' })
   @IsInt()
-  medioId?: number;
+  medioId: number;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsNotEmpty({ message: 'El operador es obligatorio' })
   @IsInt()
-  operadorId?: number;
+  operadorId: number;
 }

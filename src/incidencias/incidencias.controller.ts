@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -87,11 +88,26 @@ export class IncidenciasController {
 
   @Post()
   @ApiOperation({ summary: 'Crear incidencia' })
+  @UseInterceptors(
+    FileInterceptor('imagen', {
+      storage: diskStorage({
+        destination: process.env.UPLOAD_DIR ?? './uploads',
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+        },
+      }),
+    }),
+  )
   create(
     @Body() dto: CreateIncidenciaDto,
+    @UploadedFile() imagen: Express.Multer.File,
     @CurrentUser('id') usuarioId: number,
   ) {
-    return this.incidenciasService.create(dto, usuarioId);
+    if (!imagen) {
+      throw new BadRequestException('La imagen es obligatoria');
+    }
+    return this.incidenciasService.create(dto, usuarioId, imagen);
   }
 
   @Patch(':id')
