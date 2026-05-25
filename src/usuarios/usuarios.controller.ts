@@ -86,4 +86,14 @@ export class UsuariosController {
   ) {
     return this.usuariosService.updateRoles(id, roles);
   }
+
+  @Patch(':id/jurisdicciones')
+  @Roles('admin', 'supervisor')
+  @ApiOperation({ summary: 'Asignar jurisdicciones de alertas SJL al usuario' })
+  asignarJurisdicciones(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('jurisdiccionIds') jurisdiccionIds: number[],
+  ) {
+    return this.usuariosService.asignarJurisdicciones(id, jurisdiccionIds ?? []);
+  }
 }

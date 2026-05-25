@@ -3,7 +3,6 @@ import {
   UnauthorizedException,
   ForbiddenException,
 } from '@nestjs/common';
-import { getModulosForRoles } from './constants/role-permissions';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
@@ -64,12 +63,46 @@ export class AuthService {
     return this.generateTokens(usuario.id, usuario.username!, roles);
   }
 
-  me(user: { id: number; username: string; roles: string[] }) {
+  async me(user: { id: number; username: string; roles: string[] }) {
+    // Leer módulos desde la BD (dinámico)
+    const rolesConPermisos = await this.prisma.rol.findMany({
+      where: { nombre: { in: user.roles } },
+      include: { permisos: { include: { permiso: { select: { nombre: true } } } } },
+    });
+
+    const modulosSet = new Set<string>();
+    for (const rol of rolesConPermisos) {
+      for (const rp of rol.permisos) {
+        if (rp.permiso.nombre) modulosSet.add(rp.permiso.nombre);
+      }
+    }
+
+    // Jurisdicciones efectivas = propias del usuario ∪ jurisdicciones de sus roles
+    const [directas, rolesConJurisdicciones] = await Promise.all([
+      this.prisma.usuarioJurisdiccionAsignada.findMany({
+        where: { usuarioId: user.id },
+        select: { jurisdiccionId: true },
+      }),
+      this.prisma.rol.findMany({
+        where: { nombre: { in: user.roles } },
+        select: { jurisdicciones: { select: { jurisdiccionId: true } } },
+      }),
+    ]);
+
+    const deRoles = rolesConJurisdicciones.flatMap((r) =>
+      r.jurisdicciones.map((rj) => rj.jurisdiccionId),
+    );
+
+    const jurisdiccionesEfectivas = [
+      ...new Set([...directas.map((a) => a.jurisdiccionId), ...deRoles]),
+    ];
+
     return {
       id: user.id,
       username: user.username,
       roles: user.roles,
-      modulosPermitidos: getModulosForRoles(user.roles),
+      modulosPermitidos: Array.from(modulosSet),
+      jurisdiccionesAsignadas: jurisdiccionesEfectivas,
     };
   }
 
@@ -105,8 +138,10 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    await this.prisma.refreshToken.create({
-      data: { token: refreshToken, usuarioId, expiresAt },
+    await this.prisma.refreshToken.upsert({
+      where: { token: refreshToken },
+      create: { token: refreshToken, usuarioId, expiresAt },
+      update: { usuarioId, expiresAt, revokedAt: null },
     });
 
     return { accessToken, refreshToken };

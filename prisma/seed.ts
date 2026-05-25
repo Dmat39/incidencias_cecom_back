@@ -339,7 +339,7 @@ async function main() {
   ]);
   console.log('  ✅ Operadores');
 
-  // ─── ROLES Y PERMISOS ──────────────────────────────────────────────────────
+  // ─── ROLES ────────────────────────────────────────────────────────────────
   const rolAdmin = await prisma.rol.upsert({
     where: { nombre: 'admin' },
     update: {},
@@ -358,13 +358,61 @@ async function main() {
     create: { nombre: 'supervisor', descripcion: 'Supervisor' },
   });
 
-  await prisma.rol.upsert({
+  const rolValidador = await prisma.rol.upsert({
     where: { nombre: 'validador' },
     update: {},
     create: { nombre: 'validador', descripcion: 'Validador SVI' },
   });
 
-  console.log(`  ✅ Roles: admin, operador, supervisor, validador`);
+  console.log('  ✅ Roles: admin, operador, supervisor, validador');
+
+  // ─── MÓDULOS (PERMISOS) ────────────────────────────────────────────────────
+  const MODULOS_SEED = [
+    { nombre: 'dashboard',   descripcion: 'Dashboard' },
+    { nombre: 'incidencias', descripcion: 'Incidencias' },
+    { nombre: 'alertas',     descripcion: 'Alertas SJL' },
+    { nombre: 'mapa',        descripcion: 'Mapa en Vivo' },
+    { nombre: 'serenos',     descripcion: 'Serenos' },
+    { nombre: 'usuarios',    descripcion: 'Usuarios' },
+    { nombre: 'catalogos',   descripcion: 'Catálogos' },
+    { nombre: 'reportes',    descripcion: 'Reportes' },
+    { nombre: 'metricas',    descripcion: 'Métricas' },
+    { nombre: 'auditoria',   descripcion: 'Auditoría' },
+    { nombre: 'svi',         descripcion: 'SVI' },
+  ];
+
+  const permisosSeed = await Promise.all(
+    MODULOS_SEED.map((m) =>
+      prisma.permiso.upsert({
+        where: { nombre: m.nombre },
+        update: {},
+        create: m,
+      }),
+    ),
+  );
+  const pm = new Map(permisosSeed.map((p) => [p.nombre, p.id]));
+  console.log(`  ✅ Módulos (permisos): ${permisosSeed.length}`);
+
+  // ─── ASIGNACIÓN ROL → MÓDULOS (preserva asignaciones existentes) ──────────
+  const ROL_MODULOS: Array<{ rol: typeof rolAdmin; modulos: string[] }> = [
+    { rol: rolAdmin,      modulos: ['dashboard','incidencias','alertas','mapa','serenos','usuarios','catalogos','reportes','metricas','auditoria','svi'] },
+    { rol: rolSupervisor, modulos: ['dashboard','incidencias','alertas','mapa','usuarios','catalogos','reportes','metricas'] },
+    { rol: rolOperador,   modulos: ['dashboard','incidencias','alertas','mapa'] },
+    { rol: rolValidador,  modulos: ['dashboard','incidencias','svi'] },
+  ];
+
+  for (const { rol, modulos } of ROL_MODULOS) {
+    for (const modulo of modulos) {
+      const permisoId = pm.get(modulo);
+      if (!permisoId) continue;
+      await prisma.rolPermiso.upsert({
+        where: { rolId_permisoId: { rolId: rol.id, permisoId } },
+        update: {},
+        create: { rolId: rol.id, permisoId },
+      });
+    }
+  }
+  console.log('  ✅ Módulos asignados a roles');
 
   // ─── USUARIO ADMIN ─────────────────────────────────────────────────────────
   const hashedPassword = await bcrypt.hash('admin123', 10);
