@@ -289,7 +289,6 @@ export class PanicoAppService implements OnModuleInit {
     if (!lat || !lng) return null;
     try {
       const id = this.detectarJurisdiccionId(lat, lng);
-      if (id === this.JURISDICCION_DEFAULT) return null; // sin match específico
       const jur = this.jurisdiccionesDb.find((j) => j.id === id);
       return jur ? { id: jur.id, nombre: jur.nombre ?? '' } : null;
     } catch {
