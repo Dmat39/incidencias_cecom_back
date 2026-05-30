@@ -64,21 +64,11 @@ export class AuthService {
   }
 
   async me(user: { id: number; username: string; roles: string[] }) {
-    // Leer módulos desde la BD (dinámico)
-    const rolesConPermisos = await this.prisma.rol.findMany({
-      where: { nombre: { in: user.roles } },
-      include: { permisos: { include: { permiso: { select: { nombre: true } } } } },
-    });
-
-    const modulosSet = new Set<string>();
-    for (const rol of rolesConPermisos) {
-      for (const rp of rol.permisos) {
-        if (rp.permiso.nombre) modulosSet.add(rp.permiso.nombre);
-      }
-    }
-
-    // Jurisdicciones efectivas = propias del usuario ∪ jurisdicciones de sus roles
-    const [directas, rolesConJurisdicciones] = await Promise.all([
+    const [rolesConPermisos, directas, rolesConJurisdicciones] = await Promise.all([
+      this.prisma.rol.findMany({
+        where: { nombre: { in: user.roles } },
+        include: { permisos: { include: { permiso: { select: { nombre: true } } } } },
+      }),
       this.prisma.usuarioJurisdiccionAsignada.findMany({
         where: { usuarioId: user.id },
         select: { jurisdiccionId: true },
@@ -89,10 +79,16 @@ export class AuthService {
       }),
     ]);
 
+    const modulosSet = new Set<string>();
+    for (const rol of rolesConPermisos) {
+      for (const rp of rol.permisos) {
+        if (rp.permiso.nombre) modulosSet.add(rp.permiso.nombre);
+      }
+    }
+
     const deRoles = rolesConJurisdicciones.flatMap((r) =>
       r.jurisdicciones.map((rj) => rj.jurisdiccionId),
     );
-
     const jurisdiccionesEfectivas = [
       ...new Set([...directas.map((a) => a.jurisdiccionId), ...deRoles]),
     ];

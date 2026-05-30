@@ -131,7 +131,7 @@ export class IncidenciasService {
     return inc;
   }
 
-  async getDashboardStats(fechaInicio?: string, fechaFin?: string) {
+  async getDashboardStats(fechaInicio?: string, fechaFin?: string, tipoCasoIds?: number[], subTipoCasoIds?: number[]) {
     // Default: lunes de la semana actual → hoy, calculados en zona Lima
     const todayLima = limaDate();
     const todayRef  = new Date(todayLima + 'T12:00:00Z'); // mediodía UTC del día Lima actual
@@ -144,7 +144,9 @@ export class IncidenciasService {
 
     const desde = limaStartOfDay(fechaInicio || defaultInicio);
     const hasta  = limaEndOfDay(fechaFin    || defaultFin);
-    const where  = { registradoEn: { gte: desde, lte: hasta } };
+    const where: any = { registradoEn: { gte: desde, lte: hasta } };
+    if (tipoCasoIds?.length)    where.tipoCasoId    = { in: tipoCasoIds };
+    if (subTipoCasoIds?.length) where.subTipoCasoId = { in: subTipoCasoIds };
 
     const [total, grouped, groupedSev, groupedTipo, groupedSubtipo, estados, severidadesAll, recientes, allTs] = await Promise.all([
       this.prisma.incidencia.count({ where }),
