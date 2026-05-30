@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
+import { ROLE_PERMISSIONS } from './constants/role-permissions';
 
 @Injectable()
 export class AuthService {
@@ -86,6 +87,19 @@ export class AuthService {
       }
     }
 
+    let modulosPermitidos: string[];
+    if (modulosSet.size > 0) {
+      modulosPermitidos = Array.from(modulosSet);
+    } else {
+      const fallbackSet = new Set<string>();
+      for (const role of user.roles) {
+        for (const modulo of ROLE_PERMISSIONS[role] ?? []) {
+          fallbackSet.add(modulo);
+        }
+      }
+      modulosPermitidos = Array.from(fallbackSet);
+    }
+
     const deRoles = rolesConJurisdicciones.flatMap((r) =>
       r.jurisdicciones.map((rj) => rj.jurisdiccionId),
     );
@@ -97,7 +111,7 @@ export class AuthService {
       id: user.id,
       username: user.username,
       roles: user.roles,
-      modulosPermitidos: Array.from(modulosSet),
+      modulosPermitidos,
       jurisdiccionesAsignadas: jurisdiccionesEfectivas,
     };
   }
