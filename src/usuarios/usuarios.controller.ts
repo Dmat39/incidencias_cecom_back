@@ -96,4 +96,5 @@ export class UsuariosController {
   ) {
     return this.usuariosService.asignarJurisdicciones(id, jurisdiccionIds ?? []);
   }
+
 }

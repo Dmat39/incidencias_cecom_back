@@ -82,6 +82,7 @@ export class AuditoriaInterceptor implements NestInterceptor {
           const data = responseData?.data ?? responseData;
           if (data) {
             usuarioAfectado =
+              data.codigoIncidencia ??
               data.username ??
               data.nombre ??
               data.name ??

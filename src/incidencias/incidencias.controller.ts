@@ -52,10 +52,14 @@ export class IncidenciasController {
   @Get('stats')
   @ApiOperation({ summary: 'KPIs y estadísticas del dashboard' })
   getDashboardStats(
-    @Query('fechaInicio') fechaInicio?: string,
-    @Query('fechaFin')    fechaFin?: string,
+    @Query('fechaInicio')    fechaInicio?: string,
+    @Query('fechaFin')       fechaFin?: string,
+    @Query('tipoCasoIds')    tipoCasoIds?: string,
+    @Query('subTipoCasoIds') subTipoCasoIds?: string,
   ) {
-    return this.incidenciasService.getDashboardStats(fechaInicio, fechaFin);
+    const parsedTipos    = tipoCasoIds    ? tipoCasoIds.split(',').map(Number).filter(Boolean)    : undefined;
+    const parsedSubtipos = subTipoCasoIds ? subTipoCasoIds.split(',').map(Number).filter(Boolean) : undefined;
+    return this.incidenciasService.getDashboardStats(fechaInicio, fechaFin, parsedTipos, parsedSubtipos);
   }
 
   @Get('mapa')

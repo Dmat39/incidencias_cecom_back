@@ -30,13 +30,34 @@ export class ReportesController {
   ) {
     const buffer = await this.reportesService.generarExcelIncidencias(filters);
     const filename = `incidencias_${Date.now()}.xlsx`;
-
     res.set({
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': `attachment; filename="${filename}"`,
       'Content-Length': buffer.length,
     });
+    res.send(buffer);
+  }
 
+  @Post('excel-zona')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Generar reporte Excel filtrado por perímetro geográfico' })
+  async generarExcelZona(
+    @Body()
+    dto: {
+      fechaInicio?: string;
+      fechaFin?: string;
+      polygon: [number, number][];
+    },
+    @Res() res: Response,
+  ) {
+    const buffer = await this.reportesService.generarExcelZona(dto);
+    const fecha = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Lima' });
+    const filename = `reporte_zona_${fecha}.xlsx`;
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Length': buffer.length,
+    });
     res.send(buffer);
   }
 }
