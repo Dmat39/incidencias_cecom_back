@@ -115,22 +115,135 @@ export class ReportesService {
     return Buffer.from(buffer);
   }
 
-  async generarExcelIncidencias(filters: {
+  async generarExcelCompleto(filters: {
     fechaInicio?: string;
     fechaFin?: string;
-    situacionId?: number;
     unidadId?: number;
+    situacionId?: number;
     tipoCasoId?: number;
     subTipoCasoId?: number;
+    jurisdiccionId?: number;
   }): Promise<Buffer> {
     const where: any = this.buildWhereFechas(filters.fechaInicio, filters.fechaFin);
-    if (filters.situacionId)  where.situacionId  = filters.situacionId;
-    if (filters.unidadId)     where.unidadId     = filters.unidadId;
-    if (filters.tipoCasoId)   where.tipoCasoId   = filters.tipoCasoId;
-    if (filters.subTipoCasoId) where.subTipoCasoId = filters.subTipoCasoId;
+    if (filters.unidadId)       where.unidadId       = filters.unidadId;
+    if (filters.situacionId)    where.situacionId    = filters.situacionId;
+    if (filters.tipoCasoId)     where.tipoCasoId     = filters.tipoCasoId;
+    if (filters.subTipoCasoId)  where.subTipoCasoId  = filters.subTipoCasoId;
+    if (filters.jurisdiccionId) where.jurisdiccionId = filters.jurisdiccionId;
 
-    const incidencias = await this.queryIncidencias(where);
-    return this.buildExcel(incidencias);
+    const [byTipo, bySubtipo, byJurisdiccion, incidencias, tipos, subtipos, jurisdicciones] = await Promise.all([
+      this.prisma.incidencia.groupBy({ by: ['tipoCasoId'],                 where, _count: { id: true }, orderBy: { _count: { id: 'desc' } } }),
+      this.prisma.incidencia.groupBy({ by: ['tipoCasoId', 'subTipoCasoId'], where, _count: { id: true }, orderBy: { _count: { id: 'desc' } } }),
+      this.prisma.incidencia.groupBy({ by: ['jurisdiccionId'],              where, _count: { id: true }, orderBy: { _count: { id: 'desc' } } }),
+      this.queryIncidencias(where),
+      this.prisma.tipoCaso.findMany({ select: { id: true, descripcion: true } }),
+      this.prisma.subTipoCaso.findMany({ select: { id: true, descripcion: true } }),
+      this.prisma.jurisdiccion.findMany({ select: { id: true, nombre: true } }),
+    ]);
+
+    const tipoMap         = new Map(tipos.map((t) => [t.id, t.descripcion]));
+    const subtipoMap      = new Map(subtipos.map((s) => [s.id, s.descripcion]));
+    const jurisdiccionMap = new Map(jurisdicciones.map((j) => [j.id, j.nombre ?? 'Sin nombre']));
+
+    const hs = (cell: any) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
+      cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+      cell.alignment = { horizontal: 'center' };
+    };
+
+    const workbook = new ExcelJS.Workbook();
+
+    // ── Hoja 1: Totales por Tipo de Caso ──────────────────────────────────────
+    const sh1 = workbook.addWorksheet('Por Tipo de Caso');
+    sh1.columns = [
+      { header: 'Tipo de Caso', key: 'tipo',     width: 30 },
+      { header: 'Cantidad',     key: 'cantidad', width: 14 },
+    ];
+    sh1.getRow(1).eachCell(hs);
+    byTipo.forEach((row) =>
+      sh1.addRow({ tipo: tipoMap.get(row.tipoCasoId ?? 0) ?? 'Sin tipo', cantidad: row._count.id }),
+    );
+    const t1 = sh1.addRow({ tipo: 'TOTAL', cantidad: byTipo.reduce((s, r) => s + r._count.id, 0) });
+    t1.font = { bold: true };
+
+    // ── Hoja 2: Totales por Subtipo de Caso ───────────────────────────────────
+    const sh2 = workbook.addWorksheet('Por Subtipo de Caso');
+    sh2.columns = [
+      { header: 'Tipo de Caso',    key: 'tipo',     width: 28 },
+      { header: 'Subtipo de Caso', key: 'subtipo',  width: 30 },
+      { header: 'Cantidad',        key: 'cantidad', width: 14 },
+    ];
+    sh2.getRow(1).eachCell(hs);
+    bySubtipo.forEach((row) =>
+      sh2.addRow({
+        tipo:     tipoMap.get(row.tipoCasoId ?? 0)       ?? 'Sin tipo',
+        subtipo:  subtipoMap.get(row.subTipoCasoId ?? 0) ?? 'Sin subtipo',
+        cantidad: row._count.id,
+      }),
+    );
+    const t2 = sh2.addRow({ tipo: 'TOTAL', subtipo: '', cantidad: bySubtipo.reduce((s, r) => s + r._count.id, 0) });
+    t2.font = { bold: true };
+
+    // ── Hoja 3: Totales por Jurisdicción / Zona ───────────────────────────────
+    const sh3 = workbook.addWorksheet('Por Zona');
+    sh3.columns = [
+      { header: 'Zona / Jurisdicción', key: 'zona',     width: 30 },
+      { header: 'Cantidad',            key: 'cantidad', width: 14 },
+    ];
+    sh3.getRow(1).eachCell(hs);
+    byJurisdiccion.forEach((row) =>
+      sh3.addRow({
+        zona:     jurisdiccionMap.get(row.jurisdiccionId ?? 0) ?? 'Sin zona',
+        cantidad: row._count.id,
+      }),
+    );
+    const t3 = sh3.addRow({ zona: 'TOTAL', cantidad: byJurisdiccion.reduce((s, r) => s + r._count.id, 0) });
+    t3.font = { bold: true };
+
+    // ── Hoja 4: Detalle de Incidencias ────────────────────────────────────────
+    const sh4 = workbook.addWorksheet('Detalle Incidencias');
+    sh4.columns = [
+      { header: 'Código',         key: 'codigo',        width: 15 },
+      { header: 'Fecha Registro', key: 'fechaRegistro', width: 20 },
+      { header: 'Turno',          key: 'turno',         width: 12 },
+      { header: 'Unidad',         key: 'unidad',        width: 15 },
+      { header: 'Tipo Caso',      key: 'tipoCaso',      width: 20 },
+      { header: 'Subtipo',        key: 'subTipoCaso',   width: 22 },
+      { header: 'Descripción',    key: 'descripcion',   width: 40 },
+      { header: 'Dirección',      key: 'direccion',     width: 30 },
+      { header: 'Zona',           key: 'jurisdiccion',  width: 15 },
+      { header: 'Estado',         key: 'estado',        width: 15 },
+      { header: 'Severidad',      key: 'severidad',     width: 12 },
+      { header: 'Medio',          key: 'medio',         width: 12 },
+      { header: 'Reportante',     key: 'reportante',    width: 20 },
+      { header: 'Teléfono',       key: 'telefono',      width: 15 },
+      { header: 'Operador',       key: 'operador',      width: 15 },
+      { header: 'Usuario',        key: 'usuario',       width: 18 },
+    ];
+    sh4.getRow(1).eachCell(hs);
+    incidencias.forEach((inc) =>
+      sh4.addRow({
+        codigo:        inc.codigoIncidencia ?? '',
+        fechaRegistro: fmtLima(inc.registradoEn),
+        turno:         getTurno(inc.registradoEn),
+        unidad:        inc.unidad?.descripcion ?? '',
+        tipoCaso:      inc.tipoCaso?.descripcion ?? '',
+        subTipoCaso:   inc.subTipoCaso?.descripcion ?? '',
+        descripcion:   inc.descripcion ?? '',
+        direccion:     inc.direccion ?? '',
+        jurisdiccion:  inc.jurisdiccion?.nombre ?? '',
+        estado:        inc.situacion?.descripcion ?? '',
+        severidad:     inc.severidad?.descripcion ?? '',
+        medio:         inc.medio?.descripcion ?? '',
+        reportante:    inc.nombreReportante   || 'No registra',
+        telefono:      inc.telefonoReportante || 'No registra',
+        operador:      inc.operador?.descripcion ?? '',
+        usuario:       [inc.usuario?.nombres, inc.usuario?.apellidos].filter(Boolean).join(' '),
+      }),
+    );
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    return Buffer.from(buffer);
   }
 
   async generarExcelZona(dto: {
