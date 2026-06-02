@@ -48,4 +48,16 @@ export class FilterIncidenciaDto extends PaginationDto {
   @Type(() => Number)
   @IsInt()
   medioId?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  tipoCasoId?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  subTipoCasoId?: number;
 }
