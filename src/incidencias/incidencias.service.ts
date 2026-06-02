@@ -82,11 +82,13 @@ export class IncidenciasService {
         where.registradoEn.lte = new Date(hastaBase.getTime() - 1);
       }
     }
-    if (rest.situacionId) where.situacionId = rest.situacionId;
-    if (rest.unidadId) where.unidadId = rest.unidadId;
+    if (rest.situacionId)   where.situacionId   = rest.situacionId;
+    if (rest.unidadId)      where.unidadId      = rest.unidadId;
     if (rest.jurisdiccionId) where.jurisdiccionId = rest.jurisdiccionId;
-    if (rest.severidadId) where.severidadId = rest.severidadId;
-    if (rest.medioId) where.medioId = rest.medioId;
+    if (rest.severidadId)   where.severidadId   = rest.severidadId;
+    if (rest.medioId)       where.medioId       = rest.medioId;
+    if (rest.tipoCasoId)    where.tipoCasoId    = rest.tipoCasoId;
+    if (rest.subTipoCasoId) where.subTipoCasoId = rest.subTipoCasoId;
     if (search?.trim()) {
       where.OR = [
         { codigoIncidencia: { contains: search.trim(), mode: 'insensitive' } },
@@ -162,9 +164,10 @@ export class IncidenciasService {
         orderBy: { createdAt: 'desc' },
         select: {
           id: true, codigoIncidencia: true, direccion: true, registradoEn: true,
-          tipoCaso:  { select: { descripcion: true } },
-          situacion: { select: { descripcion: true } },
-          severidad: { select: { descripcion: true } },
+          tipoCaso:    { select: { codigo: true, descripcion: true } },
+          subTipoCaso: { select: { codigo: true, descripcion: true } },
+          situacion:   { select: { descripcion: true } },
+          severidad:   { select: { descripcion: true } },
         },
       }),
       this.prisma.incidencia.findMany({ where, select: { registradoEn: true } }),
