@@ -120,16 +120,16 @@ export class ReportesService {
     fechaFin?: string;
     unidadId?: number;
     situacionId?: number;
-    tipoCasoId?: number;
-    subTipoCasoId?: number;
+    tipoCasoIds?: number[];
+    subTipoCasoIds?: number[];
     jurisdiccionId?: number;
   }): Promise<Buffer> {
     const where: any = this.buildWhereFechas(filters.fechaInicio, filters.fechaFin);
-    if (filters.unidadId)       where.unidadId       = filters.unidadId;
-    if (filters.situacionId)    where.situacionId    = filters.situacionId;
-    if (filters.tipoCasoId)     where.tipoCasoId     = filters.tipoCasoId;
-    if (filters.subTipoCasoId)  where.subTipoCasoId  = filters.subTipoCasoId;
-    if (filters.jurisdiccionId) where.jurisdiccionId = filters.jurisdiccionId;
+    if (filters.unidadId)                 where.unidadId       = filters.unidadId;
+    if (filters.situacionId)              where.situacionId    = filters.situacionId;
+    if (filters.tipoCasoIds?.length)      where.tipoCasoId     = { in: filters.tipoCasoIds };
+    if (filters.subTipoCasoIds?.length)   where.subTipoCasoId  = { in: filters.subTipoCasoIds };
+    if (filters.jurisdiccionId)           where.jurisdiccionId = filters.jurisdiccionId;
 
     const [byTipo, bySubtipo, byJurisdiccion, incidencias, tipos, subtipos, jurisdicciones] = await Promise.all([
       this.prisma.incidencia.groupBy({ by: ['tipoCasoId'],                 where, _count: { id: true }, orderBy: { _count: { id: 'desc' } } }),
