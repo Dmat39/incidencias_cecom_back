@@ -23,8 +23,8 @@ export class ReportesController {
       fechaFin?: string;
       unidadId?: number;
       situacionId?: number;
-      tipoCasoId?: number;
-      subTipoCasoId?: number;
+      tipoCasoIds?: number[];
+      subTipoCasoIds?: number[];
       jurisdiccionId?: number;
     },
     @Res() res: Response,
