@@ -10,11 +10,19 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { SerenosService } from './serenos.service';
 import { CreateSerenoDto } from './dto/create-sereno.dto';
+
+class SyncSerenoDto {
+  @IsString() dni: string;
+  @IsString() nombres: string;
+  @IsString() apellidoPaterno: string;
+  @IsOptional() @IsString() apellidoMaterno?: string;
+}
 
 @ApiTags('Serenos')
 @ApiBearerAuth()
@@ -76,5 +84,17 @@ export class SerenosController {
   @ApiOperation({ summary: 'Habilitar/deshabilitar sereno' })
   toggleEstado(@Param('id', ParseIntPipe) id: number) {
     return this.serenosService.toggleEstado(id);
+  }
+
+  // ─── Sync interno desde Gestionate (sin JWT) ─────────────────────────────
+  @Post('sync')
+  @ApiOperation({ summary: 'Sincronizar sereno desde Gestionate (uso interno)' })
+  syncFromGestionate(@Body() dto: SyncSerenoDto) {
+    return this.serenosService.syncFromGestionate(
+      dto.dni,
+      dto.nombres,
+      dto.apellidoPaterno,
+      dto.apellidoMaterno,
+    );
   }
 }

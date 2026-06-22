@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -27,8 +28,16 @@ export class UsuariosController {
   @Get()
   @Roles('admin', 'supervisor')
   @ApiOperation({ summary: 'Listar usuarios' })
-  findAll() {
-    return this.usuariosService.findAll();
+  findAll(
+    @Query('search') search?: string,
+    @Query('page')   page?: string,
+    @Query('limit')  limit?: string,
+  ) {
+    return this.usuariosService.findAll({
+      search,
+      page:  page  ? Number(page)  : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
   }
 
   @Get(':id')
@@ -77,4 +86,15 @@ export class UsuariosController {
   ) {
     return this.usuariosService.updateRoles(id, roles);
   }
+
+  @Patch(':id/jurisdicciones')
+  @Roles('admin', 'supervisor')
+  @ApiOperation({ summary: 'Asignar jurisdicciones de alertas SJL al usuario' })
+  asignarJurisdicciones(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('jurisdiccionIds') jurisdiccionIds: number[],
+  ) {
+    return this.usuariosService.asignarJurisdicciones(id, jurisdiccionIds ?? []);
+  }
+
 }

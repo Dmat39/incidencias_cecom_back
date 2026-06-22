@@ -3,12 +3,12 @@ import {
   UnauthorizedException,
   ForbiddenException,
 } from '@nestjs/common';
-import { getModulosForRoles } from './constants/role-permissions';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
+import { ROLE_PERMISSIONS } from './constants/role-permissions';
 
 @Injectable()
 export class AuthService {
@@ -64,12 +64,55 @@ export class AuthService {
     return this.generateTokens(usuario.id, usuario.username!, roles);
   }
 
-  me(user: { id: number; username: string; roles: string[] }) {
+  async me(user: { id: number; username: string; roles: string[] }) {
+    const [rolesConPermisos, directas, rolesConJurisdicciones] = await Promise.all([
+      this.prisma.rol.findMany({
+        where: { nombre: { in: user.roles } },
+        include: { permisos: { include: { permiso: { select: { nombre: true } } } } },
+      }),
+      this.prisma.usuarioJurisdiccionAsignada.findMany({
+        where: { usuarioId: user.id },
+        select: { jurisdiccionId: true },
+      }),
+      this.prisma.rol.findMany({
+        where: { nombre: { in: user.roles } },
+        select: { jurisdicciones: { select: { jurisdiccionId: true } } },
+      }),
+    ]);
+
+    const modulosSet = new Set<string>();
+    for (const rol of rolesConPermisos) {
+      for (const rp of rol.permisos) {
+        if (rp.permiso.nombre) modulosSet.add(rp.permiso.nombre);
+      }
+    }
+
+    let modulosPermitidos: string[];
+    if (modulosSet.size > 0) {
+      modulosPermitidos = Array.from(modulosSet);
+    } else {
+      const fallbackSet = new Set<string>();
+      for (const role of user.roles) {
+        for (const modulo of ROLE_PERMISSIONS[role] ?? []) {
+          fallbackSet.add(modulo);
+        }
+      }
+      modulosPermitidos = Array.from(fallbackSet);
+    }
+
+    const deRoles = rolesConJurisdicciones.flatMap((r) =>
+      r.jurisdicciones.map((rj) => rj.jurisdiccionId),
+    );
+    const jurisdiccionesEfectivas = [
+      ...new Set([...directas.map((a) => a.jurisdiccionId), ...deRoles]),
+    ];
+
     return {
       id: user.id,
       username: user.username,
       roles: user.roles,
-      modulosPermitidos: getModulosForRoles(user.roles),
+      modulosPermitidos,
+      jurisdiccionesAsignadas: jurisdiccionesEfectivas,
     };
   }
 
@@ -105,8 +148,10 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    await this.prisma.refreshToken.create({
-      data: { token: refreshToken, usuarioId, expiresAt },
+    await this.prisma.refreshToken.upsert({
+      where: { token: refreshToken },
+      create: { token: refreshToken, usuarioId, expiresAt },
+      update: { usuarioId, expiresAt, revokedAt: null },
     });
 
     return { accessToken, refreshToken };

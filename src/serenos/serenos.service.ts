@@ -87,4 +87,12 @@ export class SerenosService {
       data: { habilitado: !sereno.habilitado },
     });
   }
+
+  async syncFromGestionate(dni: string, nombres: string, apellidoPaterno: string, apellidoMaterno?: string) {
+    return this.prisma.sereno.upsert({
+      where: { dni },
+      update: { nombres, apellidoPaterno, apellidoMaterno },
+      create: { dni, nombres, apellidoPaterno, apellidoMaterno, habilitado: true },
+    });
+  }
 }

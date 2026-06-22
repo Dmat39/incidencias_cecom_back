@@ -147,14 +147,16 @@ model Operador {
 }
 
 model Jurisdiccion {
-  id          Int          @id @default(autoincrement())
-  codigo      String?
-  nombre      String?
-  habilitado  Boolean      @default(true)
-  incidencias Incidencia[]
-  delitos     Delito[]
-  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+  id                  Int                           @id @default(autoincrement())
+  codigo              String?
+  nombre              String?
+  habilitado          Boolean                       @default(true)
+  incidencias         Incidencia[]
+  delitos             Delito[]
+  usuariosAsignados   UsuarioJurisdiccionAsignada[]
+  rolesAsignados      RolJurisdiccion[]
+  createdAt           DateTime                      @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime                      @updatedAt @db.Timestamptz(6)
 
   @@map("jurisdicciones")
 }
@@ -193,33 +195,35 @@ model TipoDelito {
 // ─── USUARIOS & AUTH ──────────────────────────────────────────────────────────
 
 model Usuario {
-  id            Int            @id @default(autoincrement())
-  nombres       String
-  apellidos     String?
-  email         String         @unique
-  username      String?        @unique
-  password      String
-  habilitado    Boolean        @default(true)
-  medioId       Int?
-  medio         MedioReporte?  @relation(fields: [medioId], references: [id])
-  roles         UsuarioRol[]
-  incidencias   Incidencia[]
-  evidencias    Evidencia[]
-  refreshTokens RefreshToken[]
-  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime       @updatedAt @db.Timestamptz(6)
+  id                      Int                           @id @default(autoincrement())
+  nombres                 String
+  apellidos               String?
+  email                   String                        @unique
+  username                String?                       @unique
+  password                String
+  habilitado              Boolean                       @default(true)
+  medioId                 Int?
+  medio                   MedioReporte?                 @relation(fields: [medioId], references: [id])
+  roles                   UsuarioRol[]
+  jurisdiccionesAsignadas UsuarioJurisdiccionAsignada[]
+  incidencias             Incidencia[]
+  evidencias              Evidencia[]
+  refreshTokens           RefreshToken[]
+  createdAt               DateTime                      @default(now()) @db.Timestamptz(6)
+  updatedAt               DateTime                      @updatedAt @db.Timestamptz(6)
 
   @@map("usuarios")
 }
 
 model Rol {
-  id          Int          @id @default(autoincrement())
-  nombre      String       @unique
-  descripcion String?
-  usuarios    UsuarioRol[]
-  permisos    RolPermiso[]
-  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+  id             Int               @id @default(autoincrement())
+  nombre         String            @unique
+  descripcion    String?
+  usuarios       UsuarioRol[]
+  permisos       RolPermiso[]
+  jurisdicciones RolJurisdiccion[]
+  createdAt      DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime          @updatedAt @db.Timestamptz(6)
 
   @@map("roles")
 }
@@ -245,6 +249,16 @@ model UsuarioRol {
   @@map("usuario_roles")
 }
 
+model UsuarioJurisdiccionAsignada {
+  usuarioId      Int
+  jurisdiccionId Int
+  usuario        Usuario      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  jurisdiccion   Jurisdiccion @relation(fields: [jurisdiccionId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, jurisdiccionId])
+  @@map("usuario_jurisdicciones_asignadas")
+}
+
 model RolPermiso {
   rolId     Int
   permisoId Int
@@ -253,6 +267,16 @@ model RolPermiso {
 
   @@id([rolId, permisoId])
   @@map("rol_permisos")
+}
+
+model RolJurisdiccion {
+  rolId          Int
+  jurisdiccionId Int
+  rol            Rol          @relation(fields: [rolId], references: [id], onDelete: Cascade)
+  jurisdiccion   Jurisdiccion @relation(fields: [jurisdiccionId], references: [id], onDelete: Cascade)
+
+  @@id([rolId, jurisdiccionId])
+  @@map("rol_jurisdicciones")
 }
 
 model RefreshToken {

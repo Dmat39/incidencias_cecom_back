@@ -9,6 +9,6 @@ import { EvidenciasModule } from '../evidencias/evidencias.module';
   imports: [EvidenciasModule],
   controllers: [IncidenciasController, BuscarIncidenciasController],
   providers: [IncidenciasService, IncidenciasGateway],
-  exports: [IncidenciasService],
+  exports: [IncidenciasService, IncidenciasGateway],
 })
 export class IncidenciasModule {}

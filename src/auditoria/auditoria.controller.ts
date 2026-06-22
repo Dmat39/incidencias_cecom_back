@@ -14,11 +14,14 @@ export class AuditoriaController {
 
   @Get()
   @Roles('admin')
-  @ApiOperation({ summary: 'Listar auditoría de usuarios' })
+  @ApiOperation({ summary: 'Listar auditoría' })
   findAll(
-    @Query('page') page = '1',
-    @Query('limit') limit = '20',
+    @Query('page')   page   = '1',
+    @Query('limit')  limit  = '20',
+    @Query('modulo') modulo?: string,
+    @Query('search') search?: string,
+    @Query('accion') accion?: string,
   ) {
-    return this.auditoriaService.findAll(+page, +limit);
+    return this.auditoriaService.findAll(+page, +limit, modulo, search, accion);
   }
 }

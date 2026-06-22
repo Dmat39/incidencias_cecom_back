@@ -54,6 +54,7 @@ export class CatalogosService {
   findJurisdicciones() {
     return this.prisma.jurisdiccion.findMany({
       where: { habilitado: true },
+      select: { id: true, nombre: true, codigo: true },
       orderBy: { nombre: 'asc' },
     });
   }

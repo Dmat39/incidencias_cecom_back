@@ -18,6 +18,12 @@ const SELECT_USUARIO = {
   medioId: true,
   medio: { select: { id: true, descripcion: true } },
   roles: { include: { rol: { select: { id: true, nombre: true } } } },
+  jurisdiccionesAsignadas: {
+    select: {
+      jurisdiccionId: true,
+      jurisdiccion: { select: { id: true, nombre: true } },
+    },
+  },
   createdAt: true,
   updatedAt: true,
 };
@@ -34,8 +40,28 @@ export class UsuariosService {
     return roles.map((r) => r.id);
   }
 
-  async findAll() {
-    return this.prisma.usuario.findMany({ select: SELECT_USUARIO });
+  async findAll(filters?: { search?: string; page?: number; limit?: number }) {
+    const page  = filters?.page  ?? 1;
+    const limit = filters?.limit ?? 20;
+    const skip  = (page - 1) * limit;
+
+    const where: any = {};
+    if (filters?.search?.trim()) {
+      const q = filters.search.trim();
+      where.OR = [
+        { username:  { contains: q, mode: 'insensitive' } },
+        { nombres:   { contains: q, mode: 'insensitive' } },
+        { apellidos: { contains: q, mode: 'insensitive' } },
+        { email:     { contains: q, mode: 'insensitive' } },
+      ];
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.usuario.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' }, select: SELECT_USUARIO }),
+      this.prisma.usuario.count({ where }),
+    ]);
+
+    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
   }
 
   async findOne(id: number) {
@@ -113,4 +139,16 @@ export class UsuariosService {
     });
     return this.getRoles(id);
   }
+
+  async asignarJurisdicciones(id: number, jurisdiccionIds: number[]) {
+    await this.findOne(id);
+    await this.prisma.usuarioJurisdiccionAsignada.deleteMany({ where: { usuarioId: id } });
+    if (jurisdiccionIds.length) {
+      await this.prisma.usuarioJurisdiccionAsignada.createMany({
+        data: jurisdiccionIds.map((jurisdiccionId) => ({ usuarioId: id, jurisdiccionId })),
+      });
+    }
+    return this.findOne(id);
+  }
+
 }

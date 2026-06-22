@@ -12,6 +12,9 @@ import { EvidenciasModule } from './evidencias/evidencias.module';
 import { ReportesModule } from './reportes/reportes.module';
 import { AuditoriaModule } from './auditoria/auditoria.module';
 import { AuditoriaInterceptor } from './auditoria/auditoria.interceptor';
+import { GestionateModule } from './gestionate/gestionate.module';
+import { PanicoAppModule } from './panico-app/panico-app.module';
+import { RolesModule } from './roles/roles.module';
 
 @Module({
   imports: [
@@ -26,6 +29,9 @@ import { AuditoriaInterceptor } from './auditoria/auditoria.interceptor';
     EvidenciasModule,
     ReportesModule,
     AuditoriaModule,
+    GestionateModule,
+    PanicoAppModule,
+    RolesModule,
   ],
   providers: [
     {
