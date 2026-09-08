@@ -6,6 +6,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { RequierePermiso } from '../auth/decorators/permisos.decorator';
 import { RolesService } from './roles.service';
 
 @ApiTags('Roles')
@@ -17,18 +18,21 @@ export class RolesController {
   constructor(private rolesService: RolesService) {}
 
   @Get()
+  @RequierePermiso('usuarios')
   @ApiOperation({ summary: 'Listar todos los roles con sus módulos' })
   findAll() {
     return this.rolesService.findAll();
   }
 
   @Get('permisos')
+  @RequierePermiso('usuarios')
   @ApiOperation({ summary: 'Listar todos los módulos disponibles' })
   findAllPermisos() {
     return this.rolesService.findAllPermisos();
   }
 
   @Get(':id')
+  @RequierePermiso('usuarios')
   @ApiOperation({ summary: 'Obtener rol por ID' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.rolesService.findOne(id);

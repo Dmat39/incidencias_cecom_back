@@ -2,7 +2,7 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { RequierePermiso } from '../auth/decorators/permisos.decorator';
 import { AuditoriaService } from './auditoria.service';
 
 @ApiTags('Auditoría')
@@ -13,7 +13,7 @@ export class AuditoriaController {
   constructor(private auditoriaService: AuditoriaService) {}
 
   @Get()
-  @Roles('admin')
+  @RequierePermiso('auditoria')
   @ApiOperation({ summary: 'Listar auditoría' })
   findAll(
     @Query('page')   page   = '1',

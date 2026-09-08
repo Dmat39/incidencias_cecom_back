@@ -37,12 +37,15 @@ export class RolesService {
   }
 
   async create(dto: { nombre: string; descripcion?: string; permisoIds?: number[] }) {
-    const exists = await this.prisma.rol.findFirst({ where: { nombre: dto.nombre } });
-    if (exists) throw new ConflictException(`El rol '${dto.nombre}' ya existe`);
+    const nombre = dto.nombre.toLowerCase().trim();
+    // Se compara ya normalizado: si no, crear 'SDAS' no detecta el 'sdas'
+    // existente y revienta más abajo con un error crudo de Prisma.
+    const exists = await this.prisma.rol.findFirst({ where: { nombre } });
+    if (exists) throw new ConflictException(`El rol '${nombre}' ya existe`);
 
     return this.prisma.rol.create({
       data: {
-        nombre: dto.nombre.toLowerCase().trim(),
+        nombre,
         descripcion: dto.descripcion,
         permisos: dto.permisoIds?.length
           ? { create: dto.permisoIds.map((permisoId) => ({ permisoId })) }
@@ -55,7 +58,14 @@ export class RolesService {
   async update(id: number, dto: { nombre?: string; descripcion?: string }) {
     await this.findOne(id);
     const data: any = {};
-    if (dto.nombre !== undefined) data.nombre = dto.nombre.toLowerCase().trim();
+    if (dto.nombre !== undefined) {
+      const nombre = dto.nombre.toLowerCase().trim();
+      const exists = await this.prisma.rol.findFirst({
+        where: { nombre, NOT: { id } },
+      });
+      if (exists) throw new ConflictException(`El rol '${nombre}' ya existe`);
+      data.nombre = nombre;
+    }
     if (dto.descripcion !== undefined) data.descripcion = dto.descripcion;
     return this.prisma.rol.update({ where: { id }, data, select: SELECT_ROL });
   }
