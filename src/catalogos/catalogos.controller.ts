@@ -13,7 +13,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { RequierePermiso } from '../auth/decorators/permisos.decorator';
 import { CatalogosService } from './catalogos.service';
 
 @ApiTags('Catálogos')
@@ -31,17 +31,17 @@ export class CatalogosController {
   }
 
   @Post('unidades')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   createUnidad(@Body() data: any) { return this.catalogosService.createUnidad(data); }
 
   @Patch('unidades/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   updateUnidad(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.catalogosService.updateUnidad(id, data);
   }
 
   @Delete('unidades/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   removeUnidad(@Param('id', ParseIntPipe) id: number) {
     return this.catalogosService.removeUnidad(id);
   }
@@ -54,17 +54,17 @@ export class CatalogosController {
   }
 
   @Post('tipo-casos')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   createTipoCaso(@Body() data: any) { return this.catalogosService.createTipoCaso(data); }
 
   @Patch('tipo-casos/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   updateTipoCaso(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.catalogosService.updateTipoCaso(id, data);
   }
 
   @Delete('tipo-casos/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   removeTipoCaso(@Param('id', ParseIntPipe) id: number) {
     return this.catalogosService.removeTipoCaso(id);
   }
@@ -77,17 +77,17 @@ export class CatalogosController {
   }
 
   @Post('subtipo-casos')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   createSubTipoCaso(@Body() data: any) { return this.catalogosService.createSubTipoCaso(data); }
 
   @Patch('subtipo-casos/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   updateSubTipoCaso(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.catalogosService.updateSubTipoCaso(id, data);
   }
 
   @Delete('subtipo-casos/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   removeSubTipoCaso(@Param('id', ParseIntPipe) id: number) {
     return this.catalogosService.removeSubTipoCaso(id);
   }
@@ -98,17 +98,17 @@ export class CatalogosController {
   findJurisdicciones() { return this.catalogosService.findJurisdicciones(); }
 
   @Post('jurisdicciones')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   createJurisdiccion(@Body() data: any) { return this.catalogosService.createJurisdiccion(data); }
 
   @Patch('jurisdicciones/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   updateJurisdiccion(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.catalogosService.updateJurisdiccion(id, data);
   }
 
   @Delete('jurisdicciones/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   removeJurisdiccion(@Param('id', ParseIntPipe) id: number) {
     return this.catalogosService.removeJurisdiccion(id);
   }
@@ -119,17 +119,17 @@ export class CatalogosController {
   findMedios() { return this.catalogosService.findMedios(); }
 
   @Post('medios')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   createMedio(@Body() data: any) { return this.catalogosService.createMedio(data); }
 
   @Patch('medios/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   updateMedio(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.catalogosService.updateMedio(id, data);
   }
 
   @Delete('medios/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   removeMedio(@Param('id', ParseIntPipe) id: number) {
     return this.catalogosService.removeMedio(id);
   }
@@ -142,17 +142,17 @@ export class CatalogosController {
   }
 
   @Post('operadores')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   createOperador(@Body() data: any) { return this.catalogosService.createOperador(data); }
 
   @Patch('operadores/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   updateOperador(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.catalogosService.updateOperador(id, data);
   }
 
   @Delete('operadores/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   removeOperador(@Param('id', ParseIntPipe) id: number) {
     return this.catalogosService.removeOperador(id);
   }
@@ -163,17 +163,17 @@ export class CatalogosController {
   findEstadoIncidencias() { return this.catalogosService.findEstadoIncidencias(); }
 
   @Post('estado-incidencias')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   createEstadoIncidencia(@Body() data: any) { return this.catalogosService.createEstadoIncidencia(data); }
 
   @Patch('estado-incidencias/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   updateEstadoIncidencia(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.catalogosService.updateEstadoIncidencia(id, data);
   }
 
   @Delete('estado-incidencias/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   removeEstadoIncidencia(@Param('id', ParseIntPipe) id: number) {
     return this.catalogosService.removeEstadoIncidencia(id);
   }
@@ -184,17 +184,17 @@ export class CatalogosController {
   findSeveridades() { return this.catalogosService.findSeveridades(); }
 
   @Post('severidades')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   createSeveridad(@Body() data: any) { return this.catalogosService.createSeveridad(data); }
 
   @Patch('severidades/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   updateSeveridad(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.catalogosService.updateSeveridad(id, data);
   }
 
   @Delete('severidades/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   removeSeveridad(@Param('id', ParseIntPipe) id: number) {
     return this.catalogosService.removeSeveridad(id);
   }
@@ -205,17 +205,17 @@ export class CatalogosController {
   findCargoSerenos() { return this.catalogosService.findCargoSerenos(); }
 
   @Post('cargo-serenos')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   createCargoSereno(@Body() data: any) { return this.catalogosService.createCargoSereno(data); }
 
   @Patch('cargo-serenos/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   updateCargoSereno(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.catalogosService.updateCargoSereno(id, data);
   }
 
   @Delete('cargo-serenos/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   removeCargoSereno(@Param('id', ParseIntPipe) id: number) {
     return this.catalogosService.removeCargoSereno(id);
   }
@@ -226,17 +226,17 @@ export class CatalogosController {
   findTipoReportantes() { return this.catalogosService.findTipoReportantes(); }
 
   @Post('tipo-reportantes')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   createTipoReportante(@Body() data: any) { return this.catalogosService.createTipoReportante(data); }
 
   @Patch('tipo-reportantes/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   updateTipoReportante(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.catalogosService.updateTipoReportante(id, data);
   }
 
   @Delete('tipo-reportantes/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   removeTipoReportante(@Param('id', ParseIntPipe) id: number) {
     return this.catalogosService.removeTipoReportante(id);
   }
@@ -247,17 +247,17 @@ export class CatalogosController {
   findEstadoProcesos() { return this.catalogosService.findEstadoProcesos(); }
 
   @Post('estado-procesos')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   createEstadoProceso(@Body() data: any) { return this.catalogosService.createEstadoProceso(data); }
 
   @Patch('estado-procesos/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   updateEstadoProceso(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.catalogosService.updateEstadoProceso(id, data);
   }
 
   @Delete('estado-procesos/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   removeEstadoProceso(@Param('id', ParseIntPipe) id: number) {
     return this.catalogosService.removeEstadoProceso(id);
   }
@@ -268,17 +268,17 @@ export class CatalogosController {
   findGeneroAgresor() { return this.catalogosService.findGeneroAgresor(); }
 
   @Post('genero-agresor')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   createGeneroAgresor(@Body() data: any) { return this.catalogosService.createGeneroAgresor(data); }
 
   @Patch('genero-agresor/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   updateGeneroAgresor(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.catalogosService.updateGeneroAgresor(id, data);
   }
 
   @Delete('genero-agresor/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   removeGeneroAgresor(@Param('id', ParseIntPipe) id: number) {
     return this.catalogosService.removeGeneroAgresor(id);
   }
@@ -289,17 +289,17 @@ export class CatalogosController {
   findGeneroVictima() { return this.catalogosService.findGeneroVictima(); }
 
   @Post('genero-victima')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   createGeneroVictima(@Body() data: any) { return this.catalogosService.createGeneroVictima(data); }
 
   @Patch('genero-victima/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   updateGeneroVictima(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.catalogosService.updateGeneroVictima(id, data);
   }
 
   @Delete('genero-victima/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   removeGeneroVictima(@Param('id', ParseIntPipe) id: number) {
     return this.catalogosService.removeGeneroVictima(id);
   }
@@ -310,17 +310,17 @@ export class CatalogosController {
   findSeveridadProcesos() { return this.catalogosService.findSeveridadProcesos(); }
 
   @Post('severidad-procesos')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   createSeveridadProceso(@Body() data: any) { return this.catalogosService.createSeveridadProceso(data); }
 
   @Patch('severidad-procesos/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   updateSeveridadProceso(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.catalogosService.updateSeveridadProceso(id, data);
   }
 
   @Delete('severidad-procesos/:id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('catalogos')
   removeSeveridadProceso(@Param('id', ParseIntPipe) id: number) {
     return this.catalogosService.removeSeveridadProceso(id);
   }

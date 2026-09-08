@@ -7,7 +7,7 @@ import { IsNumber, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { RequierePermiso } from '../auth/decorators/permisos.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { PanicoAppService } from './panico-app.service';
 
@@ -53,7 +53,7 @@ export class PanicoAppController {
   /** Listado paginado de alertas del botón de pánico (proxy a panico-backend) */
   @Get('alertas')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'supervisor', 'operador')
+  @RequierePermiso('alertas')
   @ApiBearerAuth()
   async listarAlertas(
     @CurrentUser() user: { id: number; username: string },
@@ -69,7 +69,7 @@ export class PanicoAppController {
   @Post('alertas/:id/incidencia')
   @HttpCode(201)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'supervisor', 'operador')
+  @RequierePermiso('alertas')
   @ApiBearerAuth()
   async crearIncidencia(
     @Param('id') id: string,
@@ -81,7 +81,7 @@ export class PanicoAppController {
   /** Estadísticas para el dashboard */
   @Get('stats')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'supervisor', 'operador')
+  @RequierePermiso('alertas')
   @ApiBearerAuth()
   async obtenerStats() {
     return this.service.obtenerStats();
@@ -90,7 +90,7 @@ export class PanicoAppController {
   /** Cambia el estado de una alerta en panico-backend (proxy autenticado) */
   @Patch('alertas/:id/estado')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'supervisor', 'operador')
+  @RequierePermiso('alertas')
   @ApiBearerAuth()
   async cambiarEstado(
     @Param('id') id: string,
@@ -103,7 +103,7 @@ export class PanicoAppController {
   /** Bloquea un usuario de la app por su DNI (proxy a panico-backend) */
   @Patch('usuarios/bloquear')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'supervisor', 'operador')
+  @RequierePermiso('alertas')
   @ApiBearerAuth()
   async bloquearUsuario(
     @Body() body: { dni: string; motivo: string; operadorRef: string; tipo?: string },
@@ -114,7 +114,7 @@ export class PanicoAppController {
   /** Desbloquea un usuario por ID (proxy a panico-backend) */
   @Patch('usuarios/:id/desbloquear')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'supervisor', 'operador')
+  @RequierePermiso('alertas')
   @ApiBearerAuth()
   async desbloquearUsuario(
     @Param('id') id: string,
@@ -126,7 +126,7 @@ export class PanicoAppController {
   /** Lista todos los vecinos registrados en la app (proxy a panico-backend) */
   @Get('usuarios')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'supervisor', 'operador')
+  @RequierePermiso('alertas')
   @ApiBearerAuth()
   async listarUsuarios() {
     return this.service.listarUsuariosApp();
@@ -135,7 +135,7 @@ export class PanicoAppController {
   /** Historial de bloqueos de un vecino (proxy a panico-backend) */
   @Get('usuarios/:id/bloqueos')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'supervisor', 'operador')
+  @RequierePermiso('alertas')
   @ApiBearerAuth()
   async historialBloqueos(@Param('id') id: string) {
     return this.service.historialBloqueosUsuario(+id);

@@ -19,7 +19,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { RequierePermiso } from '../auth/decorators/permisos.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { IncidenciasService } from './incidencias.service';
 import { EvidenciasService } from '../evidencias/evidencias.service';
@@ -35,7 +35,7 @@ import { FilterIncidenciaDto } from './dto/filter-incidencia.dto';
 @ApiTags('Incidencias')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin', 'supervisor', 'operador', 'validador')
+@RequierePermiso('incidencias')
 @Controller('incidencias')
 export class IncidenciasController {
   constructor(
@@ -50,6 +50,7 @@ export class IncidenciasController {
   }
 
   @Get('stats')
+  @RequierePermiso('incidencias', 'dashboard')
   @ApiOperation({ summary: 'KPIs y estadísticas del dashboard' })
   getDashboardStats(
     @Query('fechaInicio')    fechaInicio?: string,
@@ -63,6 +64,7 @@ export class IncidenciasController {
   }
 
   @Get('mapa')
+  @RequierePermiso('incidencias', 'mapa')
   @ApiOperation({ summary: 'Datos para mapa (lat, lng, estado, tipo)' })
   findMapa(
     @Query('fechaInicio') fechaInicio?: string,
@@ -73,12 +75,14 @@ export class IncidenciasController {
   }
 
   @Get('calor')
+  @RequierePermiso('incidencias', 'mapa')
   @ApiOperation({ summary: 'Datos para mapa de calor' })
   findCalor() {
     return this.incidenciasService.findCalor();
   }
 
   @Get('metricas/operadores')
+  @RequierePermiso('incidencias', 'metricas')
   @ApiOperation({ summary: 'Métricas de operadores: ranking, severidad, turno' })
   getMetricasOperadores(
     @Query('fechaInicio') fechaInicio?: string,

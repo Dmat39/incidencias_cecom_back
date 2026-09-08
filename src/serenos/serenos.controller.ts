@@ -13,7 +13,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { RequierePermiso } from '../auth/decorators/permisos.decorator';
 import { SerenosService } from './serenos.service';
 import { CreateSerenoDto } from './dto/create-sereno.dto';
 
@@ -34,7 +34,7 @@ export class SerenosController {
   // ─── Lectura: todos los roles autenticados ────────────────────────────────
 
   @Get()
-  @Roles('admin', 'supervisor', 'operador', 'validador')
+  @RequierePermiso('serenos', 'incidencias')
   @ApiOperation({ summary: 'Listar serenos con paginación' })
   findAll(
     @Query('habilitado') habilitado?: string,
@@ -47,14 +47,14 @@ export class SerenosController {
   }
 
   @Get('por-cargo/:cargoId')
-  @Roles('admin', 'supervisor', 'operador', 'validador')
+  @RequierePermiso('serenos', 'incidencias')
   @ApiOperation({ summary: 'Listar serenos por cargo' })
   findByCargo(@Param('cargoId', ParseIntPipe) cargoId: number) {
     return this.serenosService.findByCargo(cargoId);
   }
 
   @Get(':id')
-  @Roles('admin', 'supervisor', 'operador', 'validador')
+  @RequierePermiso('serenos', 'incidencias')
   @ApiOperation({ summary: 'Obtener sereno por ID' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.serenosService.findOne(id);
@@ -63,14 +63,14 @@ export class SerenosController {
   // ─── Escritura: solo admin ────────────────────────────────────────────────
 
   @Post()
-  @Roles('admin')
+  @RequierePermiso('serenos')
   @ApiOperation({ summary: 'Crear sereno' })
   create(@Body() dto: CreateSerenoDto) {
     return this.serenosService.create(dto);
   }
 
   @Patch(':id')
-  @Roles('admin')
+  @RequierePermiso('serenos')
   @ApiOperation({ summary: 'Actualizar sereno' })
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -80,7 +80,7 @@ export class SerenosController {
   }
 
   @Patch(':id/estado')
-  @Roles('admin')
+  @RequierePermiso('serenos')
   @ApiOperation({ summary: 'Habilitar/deshabilitar sereno' })
   toggleEstado(@Param('id', ParseIntPipe) id: number) {
     return this.serenosService.toggleEstado(id);

@@ -13,7 +13,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { RequierePermiso } from '../auth/decorators/permisos.decorator';
 import { UsuariosService } from './usuarios.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
@@ -26,7 +26,7 @@ export class UsuariosController {
   constructor(private usuariosService: UsuariosService) {}
 
   @Get()
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('usuarios')
   @ApiOperation({ summary: 'Listar usuarios' })
   findAll(
     @Query('search') search?: string,
@@ -47,14 +47,14 @@ export class UsuariosController {
   }
 
   @Post()
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('usuarios')
   @ApiOperation({ summary: 'Crear usuario' })
   create(@Body() dto: CreateUsuarioDto) {
     return this.usuariosService.create(dto);
   }
 
   @Patch(':id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('usuarios')
   @ApiOperation({ summary: 'Actualizar usuario' })
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -64,21 +64,21 @@ export class UsuariosController {
   }
 
   @Delete(':id')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('usuarios')
   @ApiOperation({ summary: 'Eliminar usuario' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.usuariosService.remove(id);
   }
 
   @Get(':id/roles')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('usuarios')
   @ApiOperation({ summary: 'Obtener roles del usuario' })
   getRoles(@Param('id', ParseIntPipe) id: number) {
     return this.usuariosService.getRoles(id);
   }
 
   @Patch(':id/roles')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('usuarios')
   @ApiOperation({ summary: 'Actualizar roles del usuario' })
   updateRoles(
     @Param('id', ParseIntPipe) id: number,
@@ -88,7 +88,7 @@ export class UsuariosController {
   }
 
   @Patch(':id/jurisdicciones')
-  @Roles('admin', 'supervisor')
+  @RequierePermiso('usuarios')
   @ApiOperation({ summary: 'Asignar jurisdicciones de alertas SJL al usuario' })
   asignarJurisdicciones(
     @Param('id', ParseIntPipe) id: number,

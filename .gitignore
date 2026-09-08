@@ -7,3 +7,9 @@ dist
 uploads/*
 !uploads/.gitkeep
 scripts/*
+ANALISIS_TSP.md
+analizar-campos-atencion.js
+analizar-campos.js
+analizar-codigos.js
+MAPEO_MEDIOS_CORRECCION.md
+

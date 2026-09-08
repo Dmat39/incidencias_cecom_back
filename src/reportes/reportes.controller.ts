@@ -4,12 +4,13 @@ import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { RequierePermiso } from '../auth/decorators/permisos.decorator';
 import { ReportesService } from './reportes.service';
 
 @ApiTags('Reportes')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin', 'operador', 'validador')
+@RequierePermiso('reportes', 'incidencias')
 @Controller('reportes')
 export class ReportesController {
   constructor(private reportesService: ReportesService) {}

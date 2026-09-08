@@ -8,7 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
-import { ROLE_PERMISSIONS } from './constants/role-permissions';
+import { getModulosForRoles } from './constants/role-permissions';
 
 @Injectable()
 export class AuthService {
@@ -64,12 +64,13 @@ export class AuthService {
     return this.generateTokens(usuario.id, usuario.username!, roles);
   }
 
-  async me(user: { id: number; username: string; roles: string[] }) {
-    const [rolesConPermisos, directas, rolesConJurisdicciones] = await Promise.all([
-      this.prisma.rol.findMany({
-        where: { nombre: { in: user.roles } },
-        include: { permisos: { include: { permiso: { select: { nombre: true } } } } },
-      }),
+  async me(user: {
+    id: number;
+    username: string;
+    roles: string[];
+    modulos?: string[];
+  }) {
+    const [directas, rolesConJurisdicciones] = await Promise.all([
       this.prisma.usuarioJurisdiccionAsignada.findMany({
         where: { usuarioId: user.id },
         select: { jurisdiccionId: true },
@@ -80,25 +81,9 @@ export class AuthService {
       }),
     ]);
 
-    const modulosSet = new Set<string>();
-    for (const rol of rolesConPermisos) {
-      for (const rp of rol.permisos) {
-        if (rp.permiso.nombre) modulosSet.add(rp.permiso.nombre);
-      }
-    }
-
-    let modulosPermitidos: string[];
-    if (modulosSet.size > 0) {
-      modulosPermitidos = Array.from(modulosSet);
-    } else {
-      const fallbackSet = new Set<string>();
-      for (const role of user.roles) {
-        for (const modulo of ROLE_PERMISSIONS[role] ?? []) {
-          fallbackSet.add(modulo);
-        }
-      }
-      modulosPermitidos = Array.from(fallbackSet);
-    }
+    // Los módulos los calcula ya JwtStrategy contra la BD. Se reutilizan tal
+    // cual para que el menú del front y RolesGuard nunca puedan divergir.
+    const modulosPermitidos = user.modulos ?? getModulosForRoles(user.roles);
 
     const deRoles = rolesConJurisdicciones.flatMap((r) =>
       r.jurisdicciones.map((rj) => rj.jurisdiccionId),
