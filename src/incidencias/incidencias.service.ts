@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, InternalServerErrorException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateIncidenciaDto } from './dto/create-incidencia.dto';
@@ -28,15 +28,12 @@ function limaEndOfDay(dateStr: string): Date {
   return new Date(base.getTime() - 1);
 }
 
-const PREFIJOS: Record<number, string> = {
-  1: 'R',
-  2: 'G',
-  3: 'T',
-  4: 'C',
-  7: 'R',
-  8: 'WA',
-  9: 'BP',
-};
+/**
+ * Un prefijo se interpola en SQL crudo para construir el nombre de la
+ * secuencia, así que solo se aceptan letras mayúsculas. Con esto, el valor
+ * que venga de medio_reportes.codigo no puede inyectar nada.
+ */
+const PREFIJO_VALIDO = /^[A-Z]{1,6}$/;
 
 const INCLUDE_INCIDENCIA = {
   unidad: true,
@@ -327,8 +324,31 @@ export class IncidenciasService {
     return incidencia;
   }
 
-  async update(id: number, dto: UpdateIncidenciaDto) {
-    await this.findOne(id);
+  /**
+   * El medio define el prefijo del código, y el código NO se regenera al
+   * editar. Cambiarlo deja la incidencia con un código que ya no describe su
+   * medio, así que solo lo puede hacer un admin.
+   *
+   * Se compara contra el valor actual en vez de rechazar por presencia: el
+   * formulario de edición reenvía siempre el medioId, y un reenvío del mismo
+   * valor no es un cambio.
+   */
+  private assertPuedeCambiarMedio(
+    medioActual: number | null | undefined,
+    medioNuevo: number | null | undefined,
+    roles: string[] = [],
+  ) {
+    if (medioNuevo === undefined || medioNuevo === null) return;
+    if (medioNuevo === medioActual) return;
+    if (roles.includes('admin')) return;
+    throw new ForbiddenException(
+      'Solo un administrador puede cambiar el medio de una incidencia ya registrada.',
+    );
+  }
+
+  async update(id: number, dto: UpdateIncidenciaDto, roles: string[] = []) {
+    const actual = await this.findOne(id);
+    this.assertPuedeCambiarMedio(actual.medioId, dto.medioId, roles);
     const incidencia = await this.prisma.incidencia.update({
       where: { id },
       data: dto as any,
@@ -349,8 +369,9 @@ export class IncidenciasService {
     return incidencia;
   }
 
-  async updateAtencion(id: number, dto: UpdateAtencionDto) {
-    await this.findOne(id);
+  async updateAtencion(id: number, dto: UpdateAtencionDto, roles: string[] = []) {
+    const actual = await this.findOne(id);
+    this.assertPuedeCambiarMedio(actual.medioId, dto.medioId, roles);
     const incidencia = await this.prisma.incidencia.update({
       where: { id },
       data: {
@@ -482,8 +503,35 @@ export class IncidenciasService {
     return data;
   }
 
+  /**
+   * El prefijo sale de medio_reportes.codigo, no de un mapa en código: así,
+   * crear o renombrar un medio desde el panel basta para que su prefijo
+   * funcione, sin volver a tocar el backend.
+   */
+  private async prefijoDeMedio(medioId?: number): Promise<string> {
+    if (!medioId) {
+      throw new BadRequestException('Falta el medio de reporte: no se puede generar el código.');
+    }
+    const medio = await this.prisma.medioReporte.findUnique({
+      where: { id: medioId },
+      select: { codigo: true, descripcion: true },
+    });
+    if (!medio) {
+      throw new BadRequestException(`El medio de reporte #${medioId} no existe.`);
+    }
+    const codigo = medio.codigo?.trim().toUpperCase();
+    // Antes se caía a un prefijo 'I' silencioso y el INSERT fallaba después
+    // por FK, quemando un número de secuencia sin dejar rastro del motivo.
+    if (!codigo || !PREFIJO_VALIDO.test(codigo)) {
+      throw new BadRequestException(
+        `El medio "${medio.descripcion ?? medioId}" no tiene un código válido para generar el correlativo.`,
+      );
+    }
+    return codigo;
+  }
+
   async generarCodigo(medioId?: number): Promise<string> {
-    const prefijo = medioId ? (PREFIJOS[medioId] ?? 'I') : 'I';
+    const prefijo = await this.prefijoDeMedio(medioId);
     const anio = new Date().getFullYear();
     const seqName = `seq_incidencia_${prefijo}_${anio}`;
 
