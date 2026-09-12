@@ -5,8 +5,8 @@
 --   R  Incidencias de campo      (sin cambio de letra)
 --   C  Incidencias de la central (antes G)
 --   T  Telefonía                 (antes C · "Llamada fija")
---   W  WhatsApp                  (antes WA)
---   BP Botón de Pánico           (ya aplicado el 2026-09-08)
+--   WA WhatsApp                  (sin cambios)
+--   BPD Botón de Pánico Digital  (antes BP · 'Boletín / Prensa')
 --   OV Ojo Vigilante             (nuevo)
 -- y elimina Transporte, cuyas 21 incidencias pasan a Telefonía.
 --
@@ -53,10 +53,18 @@ UPDATE medio_reportes
    SET descripcion = 'Incidencias de campo', "updatedAt" = now()
  WHERE id = 1 AND codigo = 'R';
 
--- ── 6) WhatsApp pasa de WA a W ──────────────────────────────────────────────
+-- ── 6) WhatsApp NO se toca ──────────────────────────────────────────────────
+-- Se evaluó pasarlo de WA a W y se descartó: cambiar esa letra no aporta nada
+-- y solo añadiría un segundo prefijo para el mismo medio dentro de 2026.
+-- WhatsApp conserva WA y sus 16 489 códigos siguen siendo los únicos suyos.
+
+-- ── 6b) Botón de Pánico Digital ────────────────────────────────
+-- El medio 9 estaba etiquetado 'Boletín / Prensa', que nunca fue lo que era.
+-- Pasa a BPD. Sus 15 incidencias reales conservan sus códigos BP2026000xx
+-- (los códigos emitidos no se reescriben); desde ahora se emite BPD.
 UPDATE medio_reportes
-   SET codigo = 'W', "updatedAt" = now()
- WHERE id = 8 AND codigo = 'WA';
+   SET codigo = 'BPD', descripcion = 'Botón de Pánico Digital', "updatedAt" = now()
+ WHERE id = 9 AND codigo = 'BP';
 
 -- ── 7) Ojo Vigilante (nuevo) ────────────────────────────────────────────────
 INSERT INTO medio_reportes (id, codigo, descripcion, habilitado, numeracion, "createdAt", "updatedAt")

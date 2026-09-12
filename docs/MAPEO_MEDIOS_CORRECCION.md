@@ -1,12 +1,12 @@
 # PLAN DE CORRECCIÓN DEL CATÁLOGO DE MEDIOS
 
-**Estado:** 🟡 PLAN DEFINIDO — pendiente 1 decisión (§6) y de ejecutar
-**Fecha:** 2026-09-08
+**Estado:** 🟢 APLICADO EN LOCAL — pendiente de desplegar al servidor (§5)
+**Fecha:** 2026-09-08 · *última actualización: 2026-09-12*
 **BD medida:** `postgresql://localhost:5432/incidencias_cecom` — **149 542 incidencias**
 **Evidencia previa:** `SISTEMA ANTIGUO DE INCIDENCIAS/cecom-incidence/docs/COMPARATIVA_CODIGOS_ANTIGUO_VS_NUEVO.md`
 
-> ✅ Ya aplicado: medio 9 renombrado a `Botón de Pánico` (2026-09-08).
-> ⬜ El resto **no se ha ejecutado**.
+> ✅ **Ejecutado y verificado en la BD local** el 2026-09-08 (medio 9 ajustado a `BPD` el 2026-09-12).
+> ⬜ **Pendiente en el servidor**: requiere el backend desplegado + `scripts/2026-09-08_rotacion_medios.sql`.
 
 ---
 
@@ -19,8 +19,8 @@ Seis medios, ni uno más.
 | 1 | **Incidencias de campo** | `R` | medio 1 (*Digitación*) | ❌ ya era `R` |
 | 2 | **Incidencias de la central** | `C` | medio 2 (*Radio / cámaras*) | ⚠️ `G` → `C` |
 | 3 | **Telefonía** | `T` | medio 4 (*Llamada fija*) | ⚠️ `C` → `T` |
-| 4 | **WhatsApp** | `W` | medio 8 | ⚠️ `WA` → `W` |
-| 5 | **Botón de Pánico** | `BP` | medio 9 | ✅ hecho |
+| 4 | **WhatsApp** | `WA` | medio 8 | ❌ se queda igual |
+| 5 | **Botón de Pánico Digital** | `BPD` | medio 9 (*Boletín / Prensa*) | ⚠️ `BP` → `BPD` |
 | 6 | **Ojo Vigilante** | `OV` | — *(nuevo, id 10)* | nace limpio |
 | — | ~~Transporte~~ (medio 3) | ~~`T`~~ | **se elimina** | libera la `T` |
 
@@ -35,7 +35,6 @@ Seis medios, ni uno más.
                        |
    medio 2  G  ------->  C
 
-   medio 8  WA ------->  W       (la W estaba libre)
 ```
 
 Por eso el orden de ejecución importa (§5).
@@ -52,7 +51,7 @@ No es interpretación: se cruzaron las 149 542 incidencias por operador y por ti
 | 2 | Operadores = las 8 garitas `OP. CAMARAS` (Bayóvar, Zárate, Canto Rey, La Huayrona, Mariscal Cáceres, Santa Elizabeth, Caja de Agua, 10 de Octubre) | Lo detecta **la central** |
 | 4 | De 6 053 incidencias de 2026, **5 904 son ANÓNIMO o CIUDADANO**; solo 142 serenazgo | **Llamadas** de la calle → Telefonía |
 | 8 | Operadores `OPERADOR-WHATSAPP-*` | WhatsApp |
-| 9 | 15 incidencias, todas jun-jul 2026, todas ya con prefijo `BP` | Botón de Pánico |
+| 9 | 15 incidencias **reales** (erradicación de comercio informal, patrullaje, retiro de letreros), jun-jul 2026 | Nunca fue *Boletín / Prensa* |
 
 ### 2.1 La G deja de ser un problema
 
@@ -95,9 +94,19 @@ SELECT setval('seq_incidencia_T_2026', 600, true);   -- máximo heredado = 593
 
 Así el primer código de telefonía es `T202600601` y no se solapa con nada.
 
-### 3.3 🟢 WhatsApp toma la `W` — SIN RIESGO
+### 3.3 ⬜ WhatsApp se queda con `WA` — DESCARTADO
 
-No existe ningún código que empiece por `W` seguido de dígito: los actuales son `WA…`, que es otro prefijo. Nace `seq_incidencia_W_2026` desde 1 → `W2026000001`.
+Se evaluó pasarlo a `W` (técnicamente sin riesgo: no existe ningún código `W`+dígito) y **se descartó**: cambiar esa letra no aporta nada y solo añadiría un segundo prefijo para el mismo medio dentro de 2026. WhatsApp conserva `WA`.
+
+> Queda 1 código `W202600001` de una incidencia de prueba creada antes de revertirlo. No se reescribe; la secuencia `seq_incidencia_W_2026` queda inerte.
+
+### 3.3b 🟢 Botón de Pánico pasa a `BPD` — SIN RIESGO
+
+No existe ningún código `BPD…`, así que nace `seq_incidencia_BPD_2026` desde 1 → `BPD2026000001`.
+
+Las 15 incidencias reales del medio 9 conservan sus `BP202600001`–`BP202600021`: **los códigos emitidos no se reescriben nunca**. El prefijo `BP` simplemente deja de emitirse.
+
+> Hay además 34 códigos `BP…` que pertenecen a otros medios (28 al 1, 5 al 2, 1 al 4), de ediciones del medio posteriores al alta. Contar botones de pánico por la letra del código daría 49 en vez de 15.
 
 ### 3.4 🟠 Ambigüedad dentro de 2026 — INEVITABLE, PERO ACOTADA
 
@@ -107,8 +116,9 @@ Los códigos ya emitidos **no se reescriben nunca**. Consecuencia: dentro de 202
 |---|---|---|
 | `C2026…` | Llamadas (nº 1–6 207) | Central (nº ~6 208 en adelante) |
 | `T2026…` | Transporte heredado (nº 1–593) | Telefonía (nº 601 en adelante) |
-| `WA2026…` → `W2026…` | WhatsApp | WhatsApp |
+| `WA2026…` | WhatsApp | WhatsApp *(sin cambio)* |
 | `G2026…` | Central | *(deja de emitirse)* |
+| `BP2026…` | Botón de Pánico | *(deja de emitirse; ahora `BPD`)* |
 
 **Desde el 1 de enero de 2027 esto desaparece:** las secuencias son anuales y ya no habrá códigos heredados con los que convivir. Cada prefijo significará una sola cosa.
 
@@ -139,7 +149,7 @@ const prefijo = medioId ? (PREFIJOS[medioId] ?? 'I') : 'I';   // línea 486
 
 ### 4.3 Ya resuelto
 
-- ✅ `PANICO_MEDIO_ID` → `9`, y el módulo de pánico ya genera `codigoIncidencia` con prefijo `BP`.
+- ✅ `PANICO_MEDIO_ID` → `9`, y el módulo de pánico ya genera `codigoIncidencia` (prefijo `BPD`). Antes creaba la incidencia **sin código**: el campo es `String? @unique`, Postgres acepta N nulos y la alerta se guardaba muda sin error.
 - ✅ Cambiar el medio al editar una incidencia queda restringido a `admin` (`PATCH /incidencias/:id` y `/:id/atencion`).
 
 ---
@@ -156,30 +166,45 @@ El orden importa porque las letras rotan: hay que liberar la `T` antes de asigna
 4.  medio 4: codigo C -> T, descripcion -> 'Telefonía' .. libera la C
 5.  medio 2: codigo G -> C, descripcion -> 'Incidencias de la central'
 6.  medio 1: descripcion -> 'Incidencias de campo' ...... (código R sin cambio)
-7.  medio 8: codigo WA -> W
-8.  INSERT medio 10: codigo OV, 'Ojo Vigilante'
-9.  SELECT setval('seq_incidencia_T_2026', 600, true) ... evita los duplicados lógicos
-10. Sincronizar prisma/seed.ts
-11. Verificar con §7
+6b. medio 9: codigo BP -> BPD, 'Botón de Pánico Digital'
+7.  INSERT medio 10: codigo OV, 'Ojo Vigilante'
+8.  setval de seq_incidencia_T_2026 a 600 ............... evita los duplicados lógicos
+9.  Sincronizar prisma/seed.ts
+10. Verificar con §7
 ```
 
 `medio_reportes` no tiene índice único en `codigo` (solo la PK en `id`), así que la rotación no rompe ninguna restricción. Aun así conviene ejecutar los pasos 2-8 en una sola transacción.
 
 ---
 
-## 6. ⬜ ÚNICA DECISIÓN PENDIENTE
+## 6. ✅ DECISIONES TOMADAS
 
-**¿A qué medio pasan las 21 incidencias de Transporte antes de borrarlo?**
+| Decisión | Resultado |
+|---|---|
+| Las 21 incidencias de Transporte | → **Telefonía** (medio 4). Sus códigos ya empezaban por `T`, la letra que hereda Telefonía, así que quedan alineadas. |
+| La G mezclada (56 311) | **No se parte.** Bajo el criterio *"lo encontró la central"*, cámaras y torre caen ambas ahí legítimamente. Cero filas reclasificadas. |
+| WhatsApp `WA` → `W` | **Descartado.** No aporta nada y añadiría un segundo prefijo para el mismo medio. |
+| Letra de la Central | `C`, aceptando la ambigüedad acotada de 2026 (§3.4) en vez de una letra nueva sin deuda (`CE`). |
+| Botón de Pánico | `BP` → **`BPD`**, *Botón de Pánico Digital*. |
 
-Son 21 filas de jun-jul 2026, con códigos `T2026000xxx`. No hay operadores ni ninguna otra FK apuntando al medio 3, así que solo hay que reasignar esas 21.
+### 6.1 ⚠️ Si algún día se reescribe el histórico
 
-| Opción | A favor | En contra |
-|---|---|---|
-| **A. A Telefonía** (medio 4, que hereda la `T`) | Sus códigos ya empiezan por `T`, el prefijo cuadraría con el medio | No fueron llamadas telefónicas |
-| **B. A Incidencias de campo** (medio 1) | Es lo más parecido: un incidente de transporte lo detecta el personal en la calle | Sus códigos dirán `T` y el medio será `R` |
-| **C. A la Central** (medio 2) | — | Lo mismo que B, y menos probable |
+`nextval` **no mira la tabla**: solo incrementa su propio contador. Reescribir códigos a un prefijo sin resembrar su secuencia no falla ese día — falla semanas después, cuando la secuencia alcance el rango pisado y el operador reciba *"Ya existe una incidencia con ese código"*.
 
-Con 21 filas el impacto es despreciable en cualquier caso. **A y B son ambas razonables.**
+Después de **cualquier** reescritura, en la misma transacción:
+
+```sql
+SELECT setval('"seq_incidencia_T_2026"',
+  (SELECT max((substring(substring("codigoIncidencia" from '[0-9]+$') from 5))::bigint)
+     FROM incidencias WHERE "codigoIncidencia" ~ '^T2026[0-9]+$') + 1,
+  true);
+```
+
+Las **comillas dobles dentro del literal** son obligatorias: sin ellas Postgres busca el nombre en minúsculas y falla.
+
+Normalizar también el relleno: hoy conviven códigos de 5 y 6 dígitos (`T202600028` y `T2026000028` son cadenas distintas con el mismo número lógico; ya hay 38 pares así en 2026). Reescribir sin unificar el ancho multiplica el problema.
+
+Y el límite que ningún script resuelve: los códigos emitidos están en oficios, actas y partes fuera del sistema. Reescribirlos rompe esas referencias.
 
 ---
 
@@ -192,8 +217,8 @@ SELECT id, codigo, descripcion, habilitado FROM medio_reportes ORDER BY id;
 -- Ninguna incidencia debe quedar apuntando al medio 3
 SELECT count(*) FROM incidencias WHERE "medioId" = 3;              -- esperado: 0
 
--- El total no puede cambiar
-SELECT count(*) FROM incidencias;                                  -- esperado: 149 542
+-- El total no puede cambiar (149 542 al momento del análisis, + las creadas después)
+SELECT count(*) FROM incidencias;
 
 -- Sin códigos nulos
 SELECT count(*) FROM incidencias WHERE "codigoIncidencia" IS NULL; -- esperado: 0
@@ -214,10 +239,66 @@ ORDER BY i.id DESC LIMIT 10;
 
 | | |
 |---|---|
-| Incidencias reclasificadas | **21** (solo las de Transporte) |
+| Incidencias reclasificadas | **21** (solo las de Transporte → Telefonía) |
 | Códigos históricos reescritos | **0** |
-| Medios que cambian de letra | 3 (`G→C`, `C→T`, `WA→W`) |
-| Medios nuevos | 1 (Ojo Vigilante) |
+| Medios que cambian de letra | 3 (`G→C` central, `C→T` telefonía, `BP→BPD` pánico) |
+| Medios que solo cambian de nombre | 2 (campo, y WhatsApp sin tocar) |
+| Medios nuevos | 1 (Ojo Vigilante `OV`) |
 | Medios eliminados | 1 (Transporte) |
 | Riesgo de colisión de códigos | Ninguno, tras resembrar `seq_incidencia_T_2026` |
-| Bloqueante técnico | Arreglar `PREFIJOS` antes que nada |
+| Bloqueante técnico | Arreglar `PREFIJOS` antes que nada — **ya hecho** |
+
+### 8.1 Catálogo resultante
+
+| id | Código | Medio | Antes |
+|---|---|---|---|
+| 1 | `R` | Incidencias de campo | `R` · *Digitación* |
+| 2 | `C` | Incidencias de la central | `G` · *Radio / cámaras* |
+| 4 | `T` | Telefonía | `C` · *Llamada fija* |
+| 8 | `WA` | WhatsApp | `WA` · *WhatsApp* |
+| 9 | `BPD` | Botón de Pánico Digital | `BP` · *Boletín / Prensa* |
+| 10 | `OV` | Ojo Vigilante | *no existía* |
+
+### 8.2 Verificado en local (2026-09-08)
+
+Incidencias de prueba creadas tras la rotación, todas con el prefijo correcto:
+
+```
+OV202600001   Ojo Vigilante   <- la prueba clave: ese medio no existía,
+                                 con el PREFIJOS viejo habría salido 'I'
+T202600601     Telefonía      <- arrancó en 601, el setval funcionó
+C202606208/09  Central        <- continúa desde 6 208, sin colisión
+BP202600022    Pánico         <- antes del cambio a BPD
+```
+
+> Esas 6 filas (ids 149710–149715) son datos de prueba en la BD de producción. Conviene borrarlas.
+
+### 8.3 Cómo leer un código antiguo
+
+El prefijo refleja el medio que tenía la incidencia **al momento de crearse**, con el significado que esa letra tenía **entonces**:
+
+| Prefijo | Si se creó antes del 2026-09-08 | Después |
+|---|---|---|
+| `R` | Radio / campo | Campo *(igual)* |
+| `G` | Central | *ya no se emite* |
+| `C` | Llamada fija | Central |
+| `T` | Transporte | Telefonía |
+| `WA` | WhatsApp | WhatsApp *(igual)* |
+| `BP` | Botón de Pánico | *ya no se emite; ahora `BPD`* |
+
+Alineación real medida sobre los 149 542 códigos, antes de la rotación:
+
+| Prefijo | Códigos | Coinciden con su medio | |
+|---|---|---|---|
+| `R` | 100 835 | 66 071 | 66 % |
+| `WA` | 16 489 | 10 950 | 66 % |
+| `C` | 14 442 | 6 042 | 42 % |
+| `G` | 11 200 | 11 194 | 99,9 % |
+| `T` | 6 527 | 21 | **0,3 %** |
+| `BP` | 49 | 15 | 31 % |
+
+Los antiguos `C` del medio 4 (6 042) **siguen bien clasificados**: "llamada fija" *es* telefonía, es el mismo medio renombrado. Solo su letra es la vieja.
+
+Los antiguos `T`, en cambio, pertenecen casi todos a campo (3 693) y central (2 811). Ya estaban desalineados antes de la rotación — no lo causó este cambio — pero ahora que la `T` significa Telefonía, *parecen* telefonía sin serlo.
+
+**Por eso, regla permanente: ningún reporte agrupa por la primera letra del código. Siempre por `medioId`.** Revisar `reportes.service.ts:106` y `:237`, que exponen el código en los Excel.

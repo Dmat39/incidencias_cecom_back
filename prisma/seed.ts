@@ -28,12 +28,12 @@ async function main() {
     prisma.medioReporte.upsert({
       where: { id: 8 },
       update: {},
-      create: { id: 8, codigo: 'W', descripcion: 'WhatsApp', numeracion: 8 },
+      create: { id: 8, codigo: 'WA', descripcion: 'WhatsApp', numeracion: 8 },
     }),
     prisma.medioReporte.upsert({
       where: { id: 9 },
       update: {},
-      create: { id: 9, codigo: 'BP', descripcion: 'Botón de Pánico', numeracion: 9 },
+      create: { id: 9, codigo: 'BPD', descripcion: 'Botón de Pánico Digital', numeracion: 9 },
     }),
     prisma.medioReporte.upsert({
       where: { id: 10 },
