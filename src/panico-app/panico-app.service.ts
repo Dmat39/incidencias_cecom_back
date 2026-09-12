@@ -5,6 +5,7 @@ import axios from 'axios';
 import { point, booleanPointInPolygon, polygon, multiPolygon } from '@turf/turf';
 import { PrismaService } from '../prisma/prisma.service';
 import { IncidenciasGateway } from '../incidencias/incidencias.gateway';
+import { IncidenciasService } from '../incidencias/incidencias.service';
 
 @Injectable()
 export class PanicoAppService implements OnModuleInit {
@@ -15,7 +16,7 @@ export class PanicoAppService implements OnModuleInit {
   private readonly SUBTIPO_CASO_ID     = Number(process.env.PANICO_SUBTIPO_CASO_ID      ?? 92);
   private readonly TIPO_REPORTANTE_ID  = Number(process.env.PANICO_TIPO_REPORTANTE_ID   ?? 1);
   private readonly SEVERIDAD_ID        = Number(process.env.PANICO_SEVERIDAD_ID         ?? 4);
-  private readonly MEDIO_ID            = Number(process.env.PANICO_MEDIO_ID             ?? 3);
+  private readonly MEDIO_ID            = Number(process.env.PANICO_MEDIO_ID             ?? 9); // 9 = Botón de Pánico
   private readonly OPERADOR_ID         = Number(process.env.PANICO_OPERADOR_ID          ?? 25);
   private readonly JURISDICCION_DEFAULT = Number(process.env.PANICO_JURISDICCION_DEFAULT_ID ?? 8);
 
@@ -25,6 +26,7 @@ export class PanicoAppService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly gateway: IncidenciasGateway,
+    private readonly incidenciasService: IncidenciasService,
   ) {}
 
   async onModuleInit() {
@@ -126,8 +128,13 @@ export class PanicoAppService implements OnModuleInit {
 
     const jurisdiccionId = this.detectarJurisdiccionId(alerta.lat, alerta.lng);
 
+    // El medio es siempre Botón de Pánico (no llega en el DTO, no se puede
+    // cambiar desde la petición), así que el código sale siempre con prefijo BP.
+    const codigoIncidencia = await this.incidenciasService.generarCodigo(this.MEDIO_ID);
+
     const incidencia = await this.prisma.incidencia.create({
       data: {
+        codigoIncidencia,
         unidadId:          this.UNIDAD_ID,
         tipoCasoId,
         ...(subTipoCasoId ? { subTipoCasoId } : {}),

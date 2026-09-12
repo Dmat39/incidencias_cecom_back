@@ -128,8 +128,9 @@ export class IncidenciasController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateIncidenciaDto,
+    @CurrentUser('roles') roles: string[],
   ) {
-    return this.incidenciasService.update(id, dto);
+    return this.incidenciasService.update(id, dto, roles);
   }
 
   @Patch(':id/estado')
@@ -146,8 +147,9 @@ export class IncidenciasController {
   updateAtencion(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateAtencionDto,
+    @CurrentUser('roles') roles: string[],
   ) {
-    return this.incidenciasService.updateAtencion(id, dto);
+    return this.incidenciasService.updateAtencion(id, dto, roles);
   }
 
   @Patch(':id/serenos')

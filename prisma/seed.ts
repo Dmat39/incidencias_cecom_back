@@ -7,36 +7,38 @@ async function main() {
   console.log('🌱 Iniciando seed...');
 
   // ─── MEDIOS ────────────────────────────────────────────────────────────────
+  // El `codigo` es el prefijo del codigoIncidencia: generarCodigo() lo lee de
+  // aquí, así que debe coincidir exactamente con el catálogo de producción.
   const medios = await Promise.all([
     prisma.medioReporte.upsert({
       where: { id: 1 },
       update: {},
-      create: { id: 1, codigo: 'R', descripcion: 'Radio', numeracion: 1 },
+      create: { id: 1, codigo: 'R', descripcion: 'Incidencias de campo', numeracion: 1 },
     }),
     prisma.medioReporte.upsert({
       where: { id: 2 },
       update: {},
-      create: { id: 2, codigo: 'G', descripcion: 'CCTV / Grabación', numeracion: 2 },
-    }),
-    prisma.medioReporte.upsert({
-      where: { id: 3 },
-      update: {},
-      create: { id: 3, codigo: 'T', descripcion: 'Transporte', numeracion: 3 },
+      create: { id: 2, codigo: 'C', descripcion: 'Incidencias de la central', numeracion: 2 },
     }),
     prisma.medioReporte.upsert({
       where: { id: 4 },
       update: {},
-      create: { id: 4, codigo: 'C', descripcion: 'Celular / Llamada', numeracion: 4 },
+      create: { id: 4, codigo: 'T', descripcion: 'Telefonía', numeracion: 4 },
     }),
     prisma.medioReporte.upsert({
       where: { id: 8 },
       update: {},
-      create: { id: 8, codigo: 'WA', descripcion: 'WhatsApp', numeracion: 8 },
+      create: { id: 8, codigo: 'W', descripcion: 'WhatsApp', numeracion: 8 },
     }),
     prisma.medioReporte.upsert({
       where: { id: 9 },
       update: {},
-      create: { id: 9, codigo: 'BP', descripcion: 'Boletín / Prensa', numeracion: 9 },
+      create: { id: 9, codigo: 'BP', descripcion: 'Botón de Pánico', numeracion: 9 },
+    }),
+    prisma.medioReporte.upsert({
+      where: { id: 10 },
+      update: {},
+      create: { id: 10, codigo: 'OV', descripcion: 'Ojo Vigilante', numeracion: 10 },
     }),
   ]);
   console.log(`  ✅ Medios: ${medios.length}`);
