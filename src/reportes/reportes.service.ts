@@ -8,6 +8,43 @@ function fmtLima(date: Date | null | undefined): string {
   return date.toLocaleString('sv-SE', { timeZone: 'America/Lima' });
 }
 
+const TZ_LIMA = 'America/Lima';
+
+function capitalizar(txt: string): string {
+  return txt ? txt.charAt(0).toUpperCase() + txt.slice(1) : '';
+}
+
+/**
+ * Desglosa la fecha en columnas separadas para que se pueda filtrar por cada
+ * parte desde el autofiltro de Excel, sin tener que manipular la celda.
+ * Todo se calcula en hora de Lima, igual que el resto del reporte.
+ */
+function desglosarFecha(date: Date | null | undefined) {
+  if (!date) return { anio: '', mes: '', dia: '', diaSemana: '', hora: '' };
+  return {
+    anio:      Number(date.toLocaleString('en-CA', { timeZone: TZ_LIMA, year: 'numeric' })),
+    mes:       capitalizar(date.toLocaleString('es-PE', { timeZone: TZ_LIMA, month: 'long' })),
+    dia:       Number(date.toLocaleString('en-CA', { timeZone: TZ_LIMA, day: 'numeric' })),
+    diaSemana: capitalizar(date.toLocaleString('es-PE', { timeZone: TZ_LIMA, weekday: 'long' })),
+    hora:      date.toLocaleString('sv-SE', { timeZone: TZ_LIMA }).slice(11),
+  };
+}
+
+/**
+ * Deja la hoja lista para trabajar: flechas de filtro en cada encabezado y la
+ * cabecera fija al hacer scroll. Sin esto hay que activarlo a mano en Excel
+ * cada vez que se descarga el reporte.
+ */
+function prepararHoja(sheet: ExcelJS.Worksheet) {
+  sheet.views = [{ state: 'frozen', ySplit: 1 }];
+  if (sheet.rowCount > 1) {
+    sheet.autoFilter = {
+      from: { row: 1, column: 1 },
+      to:   { row: sheet.rowCount, column: sheet.columnCount },
+    };
+  }
+}
+
 function getTurno(date: Date | null | undefined): string {
   if (!date) return '';
   const hora = parseInt(date.toLocaleString('sv-SE', { timeZone: 'America/Lima' }).slice(11, 13), 10);
@@ -64,6 +101,11 @@ export class ReportesService {
     sheet.columns = [
       { header: 'Código',         key: 'codigo',        width: 15 },
       { header: 'Fecha Registro', key: 'fechaRegistro', width: 20 },
+      { header: 'Año',            key: 'anio',          width: 8  },
+      { header: 'Mes',            key: 'mes',           width: 12 },
+      { header: 'Día',            key: 'dia',           width: 6  },
+      { header: 'Día Semana',     key: 'diaSemana',     width: 12 },
+      { header: 'Hora',           key: 'hora',          width: 10 },
       { header: 'Turno',          key: 'turno',         width: 12 },
       { header: 'Unidad',         key: 'unidad',        width: 15 },
       { header: 'Tipo Caso',      key: 'tipoCaso',      width: 20 },
@@ -91,6 +133,7 @@ export class ReportesService {
       sheet.addRow({
         codigo:        inc.codigoIncidencia ?? '',
         fechaRegistro: fmtLima(inc.registradoEn),
+        ...desglosarFecha(inc.registradoEn),
         turno:         getTurno(inc.registradoEn),
         unidad:        inc.unidad?.descripcion ?? '',
         tipoCaso:      inc.tipoCaso?.descripcion ?? '',
@@ -110,6 +153,8 @@ export class ReportesService {
         usuario:       [inc.usuario?.nombres, inc.usuario?.apellidos].filter(Boolean).join(' '),
       });
     });
+
+    prepararHoja(sheet);
 
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
@@ -205,6 +250,11 @@ export class ReportesService {
     sh4.columns = [
       { header: 'Código',         key: 'codigo',        width: 15 },
       { header: 'Fecha Registro', key: 'fechaRegistro', width: 20 },
+      { header: 'Año',            key: 'anio',          width: 8  },
+      { header: 'Mes',            key: 'mes',           width: 12 },
+      { header: 'Día',            key: 'dia',           width: 6  },
+      { header: 'Día Semana',     key: 'diaSemana',     width: 12 },
+      { header: 'Hora',           key: 'hora',          width: 10 },
       { header: 'Turno',          key: 'turno',         width: 12 },
       { header: 'Unidad',         key: 'unidad',        width: 15 },
       { header: 'Tipo Caso',      key: 'tipoCaso',      width: 20 },
@@ -225,6 +275,7 @@ export class ReportesService {
       sh4.addRow({
         codigo:        inc.codigoIncidencia ?? '',
         fechaRegistro: fmtLima(inc.registradoEn),
+        ...desglosarFecha(inc.registradoEn),
         turno:         getTurno(inc.registradoEn),
         unidad:        inc.unidad?.descripcion ?? '',
         tipoCaso:      inc.tipoCaso?.descripcion ?? '',
@@ -241,6 +292,8 @@ export class ReportesService {
         usuario:       [inc.usuario?.nombres, inc.usuario?.apellidos].filter(Boolean).join(' '),
       }),
     );
+
+    prepararHoja(sh4);
 
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
