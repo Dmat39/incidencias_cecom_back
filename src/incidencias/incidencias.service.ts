@@ -306,6 +306,7 @@ export class IncidenciasService {
       incidencia = await this.prisma.incidencia.create({
         data: {
           ...dto,
+          ...this.normalizarMotos(dto),
           ocurridoEn: dto.ocurridoEn ? new Date(dto.ocurridoEn + '-05:00') : undefined,
           codigoIncidencia,
           usuarioId,
@@ -322,6 +323,15 @@ export class IncidenciasService {
 
     this.gateway.emitNuevaIncidencia(incidencia);
     return incidencia;
+  }
+
+  /**
+   * El tipo de motos solo tiene sentido si participaron motorizados: al marcar
+   * "No" se limpia, para que no quede un tipo de moto colgado de una edición
+   * anterior.
+   */
+  private normalizarMotos(dto: { participacionMotorizados?: boolean }) {
+    return dto.participacionMotorizados === false ? { tipoMotos: null } : {};
   }
 
   /**
@@ -351,7 +361,7 @@ export class IncidenciasService {
     this.assertPuedeCambiarMedio(actual.medioId, dto.medioId, roles);
     const incidencia = await this.prisma.incidencia.update({
       where: { id },
-      data: dto as any,
+      data: { ...dto, ...this.normalizarMotos(dto) } as any,
       include: INCLUDE_INCIDENCIA,
     });
     this.gateway.emitIncidenciaActualizada(incidencia);

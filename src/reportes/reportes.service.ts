@@ -45,6 +45,26 @@ function prepararHoja(sheet: ExcelJS.Worksheet) {
   }
 }
 
+function siNo(v: boolean | null | undefined): string {
+  if (v == null) return 'No registra';
+  return v ? 'Sí' : 'No';
+}
+
+const TIPO_MOTOS_LABEL: Record<string, string> = {
+  ANTIGUAS: 'Antiguas',
+  NUEVAS:   'Nuevas (donadas por Lima)',
+  AMBAS:    'Antiguas y nuevas',
+};
+
+/** Columnas de apoyo recibido, comunes a todas las hojas de detalle. */
+function columnasApoyo(inc: { apoyoConvenio: boolean | null; participacionMotorizados: boolean | null; tipoMotos: string | null }) {
+  return {
+    apoyoConvenio: siNo(inc.apoyoConvenio),
+    motorizados:   siNo(inc.participacionMotorizados),
+    tipoMotos:     inc.tipoMotos ? TIPO_MOTOS_LABEL[inc.tipoMotos] ?? inc.tipoMotos : '',
+  };
+}
+
 function getTurno(date: Date | null | undefined): string {
   if (!date) return '';
   const hora = parseInt(date.toLocaleString('sv-SE', { timeZone: 'America/Lima' }).slice(11, 13), 10);
@@ -111,6 +131,9 @@ export class ReportesService {
       { header: 'Tipo Caso',      key: 'tipoCaso',      width: 20 },
       { header: 'Subtipo',        key: 'subTipoCaso',   width: 20 },
       { header: 'Descripción',    key: 'descripcion',   width: 40 },
+      { header: 'Apoyo Convenio', key: 'apoyoConvenio', width: 15 },
+      { header: 'Motorizados',    key: 'motorizados',   width: 13 },
+      { header: 'Tipo de Motos',  key: 'tipoMotos',     width: 24 },
       { header: 'Dirección',      key: 'direccion',     width: 30 },
       { header: 'Coordenadas',    key: 'coordenadas',   width: 28 },
       { header: 'Jurisdicción',   key: 'jurisdiccion',  width: 15 },
@@ -139,6 +162,7 @@ export class ReportesService {
         tipoCaso:      inc.tipoCaso?.descripcion ?? '',
         subTipoCaso:   inc.subTipoCaso?.descripcion ?? '',
         descripcion:   inc.descripcion ?? '',
+        ...columnasApoyo(inc),
         direccion:     inc.direccion ?? '',
         coordenadas:   inc.latitud != null && inc.longitud != null
           ? `${Number(inc.latitud)}, ${Number(inc.longitud)}`
@@ -260,6 +284,9 @@ export class ReportesService {
       { header: 'Tipo Caso',      key: 'tipoCaso',      width: 20 },
       { header: 'Subtipo',        key: 'subTipoCaso',   width: 22 },
       { header: 'Descripción',    key: 'descripcion',   width: 40 },
+      { header: 'Apoyo Convenio', key: 'apoyoConvenio', width: 15 },
+      { header: 'Motorizados',    key: 'motorizados',   width: 13 },
+      { header: 'Tipo de Motos',  key: 'tipoMotos',     width: 24 },
       { header: 'Dirección',      key: 'direccion',     width: 30 },
       { header: 'Zona',           key: 'jurisdiccion',  width: 15 },
       { header: 'Estado',         key: 'estado',        width: 15 },
@@ -281,6 +308,7 @@ export class ReportesService {
         tipoCaso:      inc.tipoCaso?.descripcion ?? '',
         subTipoCaso:   inc.subTipoCaso?.descripcion ?? '',
         descripcion:   inc.descripcion ?? '',
+        ...columnasApoyo(inc),
         direccion:     inc.direccion ?? '',
         jurisdiccion:  inc.jurisdiccion?.nombre ?? '',
         estado:        inc.situacion?.descripcion ?? '',
