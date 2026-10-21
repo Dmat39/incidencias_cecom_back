@@ -327,6 +327,15 @@ model Sereno {
 
 // ─── CORE DEL NEGOCIO ─────────────────────────────────────────────────────────
 
+// Motos de los motorizados (Hermes) que participaron en la incidencia
+enum TipoMotos {
+  ANTIGUAS // flota propia de la municipalidad
+  NUEVAS // donadas por la Municipalidad de Lima
+  AMBAS
+
+  @@map("tipo_motos")
+}
+
 model Incidencia {
   id               Int     @id @default(autoincrement())
   codigoIncidencia String? @unique
@@ -352,6 +361,13 @@ model Incidencia {
 
   // Descripción
   descripcion String? @db.Text
+
+  // Apoyo recibido. null = incidencia registrada antes de que existieran estos
+  // campos (no se sabe), false = se marcó "No".
+  apoyoConvenio            Boolean?
+  participacionMotorizados Boolean?
+  // Solo tiene valor cuando participacionMotorizados = true
+  tipoMotos                TipoMotos?
 
   // Temporalidad unificada
   registradoEn DateTime? @db.Timestamptz(6)

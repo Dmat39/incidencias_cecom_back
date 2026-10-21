@@ -1,13 +1,17 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsDateString,
+  IsEnum,
   IsInt,
   IsNumber,
   IsOptional,
   IsString,
   IsNotEmpty,
+  ValidateIf,
 } from 'class-validator';
+import { TipoMotos } from '@prisma/client';
 
 export class CreateIncidenciaDto {
   @ApiPropertyOptional()
@@ -91,4 +95,20 @@ export class CreateIncidenciaDto {
   @IsNotEmpty({ message: 'El operador es obligatorio' })
   @IsInt()
   operadorId: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  apoyoConvenio?: boolean;
+
+  @ApiPropertyOptional({ description: 'Participaron motorizados (Hermes)' })
+  @IsOptional()
+  @IsBoolean()
+  participacionMotorizados?: boolean;
+
+  @ApiPropertyOptional({ enum: TipoMotos })
+  @ValidateIf((o) => o.participacionMotorizados === true)
+  @IsNotEmpty({ message: 'Indique si las motos son antiguas o nuevas (donadas por Lima)' })
+  @IsEnum(TipoMotos)
+  tipoMotos?: TipoMotos;
 }
