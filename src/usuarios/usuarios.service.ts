@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -33,10 +34,17 @@ export class UsuariosService {
   constructor(private prisma: PrismaService) {}
 
   private async resolveRoleIds(roleNames: string[]): Promise<number[]> {
+    const nombres = [...new Set(roleNames)];
     const roles = await this.prisma.rol.findMany({
-      where: { nombre: { in: roleNames } },
-      select: { id: true },
+      where: { nombre: { in: nombres } },
+      select: { id: true, nombre: true },
     });
+    // Un nombre mal escrito no debe dejar al usuario sin ese rol en silencio
+    if (roles.length !== nombres.length) {
+      const encontrados = new Set(roles.map((r) => r.nombre));
+      const faltantes = nombres.filter((n) => !encontrados.has(n));
+      throw new BadRequestException(`Roles inexistentes: ${faltantes.join(', ')}`);
+    }
     return roles.map((r) => r.id);
   }
 
@@ -131,6 +139,10 @@ export class UsuariosService {
   }
 
   async updateRoles(id: number, roleNames: string[]) {
+    // Prisma ignora `in: undefined`: sin esta validación se asignarían todos los roles
+    if (!Array.isArray(roleNames) || !roleNames.every((r) => typeof r === 'string')) {
+      throw new BadRequestException('roles debe ser un array de strings');
+    }
     await this.findOne(id);
     const roleIds = await this.resolveRoleIds(roleNames);
     await this.prisma.usuarioRol.deleteMany({ where: { usuarioId: id } });
