@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -102,6 +103,10 @@ export class AuthService {
   }
 
   async logout(refreshToken: string) {
+    // Prisma ignora un filtro undefined: sin esta validación se revocarían todos los tokens
+    if (typeof refreshToken !== 'string' || !refreshToken) {
+      throw new BadRequestException('refreshToken es requerido');
+    }
     await this.prisma.refreshToken.updateMany({
       where: { token: refreshToken },
       data: { revokedAt: new Date() },
